@@ -5,13 +5,11 @@ import {
   ArrowRightCircle,
   Building2,
   CheckCircle2,
-  ChevronDown,
   Cog,
   Droplets,
   Flame,
   Gauge,
   HardHat,
-  RotateCcw,
   Shield,
   Snowflake,
   Sprout,
@@ -23,19 +21,14 @@ import {
 import { useApp } from '../context/AppContext';
 import { PartnerCarousel } from '../components/PartnerCarousel';
 import { ResilientImage } from '../components/ResilientImage';
-import { HeroCampus3D } from '../components/HeroCampus3D';
-import { GROUP_SECTORS, getSectorByKey, SectorDefinition, SectorKey } from '../data/sectors';
+import { HoldingCompanyHero } from '../components/hero/HoldingCompanyHero';
+import { GROUP_SECTORS, SectorDefinition, SectorKey } from '../data/sectors';
 
 export const HomePage: React.FC = () => {
   const { locale, isRtl, navigate, bootstrap, setPreselectedProduct } = useApp();
   const isAr = locale === 'ar';
   const ArrowIcon = isRtl ? ArrowLeft : ArrowRight;
-
   const [selectedSector, setSelectedSector] = useState<SectorKey | null>(null);
-  const [hoveredSector, setHoveredSector] = useState<SectorKey | null>(null);
-
-  const focusedSectorKey = hoveredSector ?? selectedSector;
-  const focusedSector = focusedSectorKey ? getSectorByKey(focusedSectorKey) : null;
 
   const homePage = bootstrap?.pages.find((p) => p.slug === 'home');
   const tr = homePage?.translation;
@@ -84,211 +77,20 @@ export const HomePage: React.FC = () => {
     document.getElementById('business-sectors')?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const handleTileClick = (sector: SectorDefinition) => {
-    if (selectedSector === sector.key) {
-      navigate(sector.route);
-    } else {
-      setSelectedSector(sector.key);
-    }
-  };
-
   return (
     <div>
-      {/* 1. PREMIUM 3D DIVERSIFIED HOLDING COMPANY HERO */}
-      <section className="relative min-h-[92vh] sm:min-h-[95vh] bg-[#051020] text-white overflow-hidden flex flex-col justify-between">
-        {/* Procedural Architectural 3D Campus Canvas */}
-        <HeroCampus3D
-          activeSector={focusedSectorKey}
-          isRtl={isRtl}
-          onHoverSector={setHoveredSector}
-          onSelectSector={(key) => {
-            setSelectedSector((prev) => (prev === key ? key : key));
-          }}
-        />
-
-        {/* Directional readability scrim without backdrop-blur over WebGL */}
-        <div
-          className={`pointer-events-none absolute inset-0 z-[1] ${
-            isRtl
-              ? 'bg-gradient-to-l from-[#040E1D]/92 via-[#051428]/68 to-[#051428]/20'
-              : 'bg-gradient-to-r from-[#040E1D]/92 via-[#051428]/68 to-[#051428]/20'
-          }`}
-          aria-hidden="true"
-        />
-        <div
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-[#040E1D]/95 via-[#040E1D]/55 to-transparent z-[1]"
-          aria-hidden="true"
-        />
-
-        {/* Main Hero Foreground Content */}
-        <div className="relative z-10 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 pb-8 flex-1 flex flex-col justify-between gap-8">
-          <div className="max-w-2xl space-y-5 my-auto pt-4">
-            <div className="inline-flex items-center gap-2.5 text-[11px] sm:text-xs font-semibold tracking-[0.18em] uppercase text-sky-300">
-              <span className="w-5 h-0.5 bg-[#D93829]" aria-hidden="true" />
-              <span>
-                {isAr
-                  ? 'مجموعة واحدة · قطاعات متعددة · رؤية موحدة'
-                  : 'ONE GROUP · MULTIPLE INDUSTRIES · ONE VISION'}
-              </span>
-            </div>
-
-            <h1
-              className="font-display font-extrabold tracking-tight text-white leading-[1.08] whitespace-pre-line"
-              style={{ fontSize: 'clamp(2.1rem, 4.3vw, 3.65rem)', textWrap: 'balance' }}
-            >
-              {tr?.heroHeading ||
-                (isAr
-                  ? 'أكثر من مجرد مجموعة...\nرؤية تجمع قطاعات متعددة.'
-                  : 'MORE THAN A GROUP.\nA VISION THAT CONNECTS INDUSTRIES.')}
-            </h1>
-
-            <p className="text-sm sm:text-base lg:text-[17px] text-slate-200 leading-relaxed max-w-xl">
-              {tr?.heroSubheading ||
-                (isAr
-                  ? 'تجمع مجموعة يونايتد بارك قطاعات متنوعة تشمل الحلول الصناعية والهندسية، والمقاولات، والتطوير العقاري، والرعاية الصحية، والطاقة المتجددة، ضمن رؤية موحدة للنمو والاستدامة.'
-                  : 'UNITED PARK GROUP brings together diverse businesses across industrial engineering, contracting, real estate development, healthcare, and renewable energy — creating integrated opportunities for sustainable growth and a stronger future.')}
-            </p>
-
-            {/* Primary & Secondary CTAs */}
-            <div className="pt-2 flex flex-wrap items-center gap-3.5">
-              <button
-                type="button"
-                onClick={scrollToSectors}
-                className="inline-flex items-center gap-2.5 px-6 sm:px-7 py-3.5 text-xs sm:text-sm font-bold tracking-wide uppercase text-white bg-[#16528E] hover:bg-[#1B64AC] rounded-md shadow-lg transition-colors min-h-[44px]"
-              >
-                <span>
-                  {tr?.heroCtaText || (isAr ? 'استكشف قطاعات المجموعة' : 'EXPLORE OUR GROUP')}
-                </span>
-                <ArrowIcon className="w-4 h-4" aria-hidden="true" />
-              </button>
-
-              <button
-                type="button"
-                onClick={() => navigate('/contact')}
-                className="inline-flex items-center gap-2 px-6 py-3.5 text-xs sm:text-sm font-semibold tracking-wide uppercase text-white bg-[#091A32]/85 border border-white/30 hover:bg-[#10294B] rounded-md transition-colors min-h-[44px]"
-              >
-                <span>{isAr ? 'تواصل معنا' : 'GET IN TOUCH'}</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Interactive Sector Focus Bar + 5-Tile Sector Dock */}
-          <div className="space-y-3">
-            {focusedSector && (
-              <div className="bg-[#071528]/92 border border-white/15 rounded-lg px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 max-w-4xl">
-                <div className="flex items-start sm:items-center gap-3">
-                  <span
-                    className="w-8 h-8 rounded-md flex items-center justify-center shrink-0 text-white"
-                    style={{ backgroundColor: focusedSector.accentHex }}
-                  >
-                    {renderSectorIcon(focusedSector.iconName, 'w-4 h-4')}
-                  </span>
-                  <div className="space-y-0.5">
-                    <div className="flex items-center gap-2 text-[11px] font-mono-tabular uppercase tracking-wider text-sky-300">
-                      <span>{isAr ? `القطاع ${focusedSector.zoneCode}` : `Sector ${focusedSector.zoneCode}`}</span>
-                      <span aria-hidden="true">·</span>
-                      <span className="text-slate-300">
-                        {isAr ? focusedSector.ar.subtitle : focusedSector.en.subtitle}
-                      </span>
-                    </div>
-                    <p className="text-sm sm:text-base font-bold text-white">
-                      {isAr ? focusedSector.ar.title : focusedSector.en.title}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 shrink-0">
-                  {selectedSector && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedSector(null);
-                        setHoveredSector(null);
-                      }}
-                      className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-300 hover:text-white border border-white/15 rounded-md"
-                    >
-                      <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
-                      <span>{isAr ? 'نظرة عامة' : 'Overview'}</span>
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => navigate(focusedSector.route)}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-[#D93829] hover:bg-[#B92B1D] rounded-md transition-colors"
-                  >
-                    <span>{isAr ? 'استكشف القطاع' : 'Explore Sector'}</span>
-                    <ArrowIcon className="w-3.5 h-3.5" aria-hidden="true" />
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Five-Tile Sector Dock (Below Hero Copy & CTAs) */}
-            <div
-              className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3"
-              role="region"
-              aria-label={isAr ? 'محدد قطاعات المجموعة' : 'Interactive group sector selector'}
-            >
-              {GROUP_SECTORS.map((sec) => {
-                const isActive = focusedSectorKey === sec.key;
-                return (
-                  <button
-                    key={sec.key}
-                    type="button"
-                    onMouseEnter={() => setHoveredSector(sec.key)}
-                    onMouseLeave={() => setHoveredSector(null)}
-                    onFocus={() => setHoveredSector(sec.key)}
-                    onBlur={() => setHoveredSector(null)}
-                    onClick={() => handleTileClick(sec)}
-                    className={`group text-start rounded-lg px-3.5 py-3 border transition-colors flex items-center gap-3 min-h-[60px] ${
-                      isActive
-                        ? 'bg-[#12325C] border-sky-400 text-white shadow-md'
-                        : 'bg-[#071528]/88 border-white/15 text-slate-200 hover:bg-[#0D2342] hover:border-white/35'
-                    }`}
-                  >
-                    <span
-                      className={`w-9 h-9 rounded-md flex items-center justify-center shrink-0 transition-colors ${
-                        isActive
-                          ? 'bg-[#D93829] text-white'
-                          : 'bg-[#10294B] text-sky-300 group-hover:text-white'
-                      }`}
-                    >
-                      {renderSectorIcon(sec.iconName, 'w-4 h-4')}
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-[10px] font-mono-tabular text-slate-400 leading-none mb-1">
-                        {sec.zoneCode}
-                      </span>
-                      <span className="block text-xs sm:text-[13px] font-semibold leading-tight truncate">
-                        {isAr ? sec.ar.shortLabel : sec.en.shortLabel}
-                      </span>
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Subtle Scroll Indicator */}
-            <div className="flex items-center justify-between pt-1 text-xs text-slate-400">
-              <button
-                type="button"
-                onClick={scrollToSectors}
-                className="inline-flex items-center gap-1.5 text-slate-300 hover:text-white transition-colors"
-              >
-                <ChevronDown className="w-4 h-4 text-sky-300" aria-hidden="true" />
-                <span>
-                  {isAr
-                    ? 'مرر لاستكشاف قطاعات الأعمال الخمسة'
-                    : 'Scroll to explore our five business sectors · Click any 3D zone'}
-                </span>
-              </button>
-              <span className="hidden md:inline font-mono-tabular text-[11px] text-slate-400">
-                {isAr ? 'جدة · المملكة العربية السعودية · منذ ١٩٨٩' : 'JEDDAH, KSA · EST. 1989'}
-              </span>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* 1. UNIFIED 3D HOLDING COMPANY HERO (R3F + useGLTF + Five-Tile Sector Dock) */}
+      <HoldingCompanyHero
+        heroHeading={tr?.heroHeading}
+        heroSubheading={tr?.heroSubheading}
+        heroCtaText={tr?.heroCtaText}
+        locale={locale}
+        isRtl={isRtl}
+        selectedSector={selectedSector}
+        onSectorChange={setSelectedSector}
+        onNavigate={navigate}
+        onExploreGroup={scrollToSectors}
+      />
 
       {/* 2. IMMEDIATE POST-HERO SECTION: OUR BUSINESS SECTORS (5 EQUAL SECTORS) */}
       <section id="business-sectors" className="bg-white py-16 sm:py-22 border-b border-slate-200">

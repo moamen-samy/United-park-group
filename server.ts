@@ -1262,6 +1262,18 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
 });
 
 async function startServer() {
+  app.use(
+    '/models',
+    express.static(path.resolve(process.cwd(), 'public/models'), {
+      maxAge: '1d',
+      setHeaders: (res, filePath) => {
+        if (filePath.endsWith('.glb')) {
+          res.setHeader('Content-Type', 'model/gltf-binary');
+        }
+      },
+    })
+  );
+
   if (process.env.NODE_ENV !== 'production') {
     const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
