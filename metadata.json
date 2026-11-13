@@ -2,5 +2,7 @@
   "name": "United Park Group — PARK",
   "description": "Official bilingual corporate website and industrial CMS for United Park Group (PARK Co. Ltd.) in Saudi Arabia — pumps, contracting, real estate, and global fluid engineering partners.",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }
