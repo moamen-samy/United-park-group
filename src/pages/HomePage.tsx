@@ -1,0 +1,774 @@
+import React, { useState } from 'react';
+import {
+  ArrowLeft,
+  ArrowRight,
+  ArrowRightCircle,
+  Building2,
+  CheckCircle2,
+  ChevronDown,
+  Cog,
+  Droplets,
+  Flame,
+  Gauge,
+  HardHat,
+  RotateCcw,
+  Shield,
+  Snowflake,
+  Sprout,
+  Stethoscope,
+  Sun,
+  Waves,
+  Wrench,
+} from 'lucide-react';
+import { useApp } from '../context/AppContext';
+import { PartnerCarousel } from '../components/PartnerCarousel';
+import { ResilientImage } from '../components/ResilientImage';
+import { HeroCampus3D } from '../components/HeroCampus3D';
+import { GROUP_SECTORS, getSectorByKey, SectorDefinition, SectorKey } from '../data/sectors';
+
+export const HomePage: React.FC = () => {
+  const { locale, isRtl, navigate, bootstrap, setPreselectedProduct } = useApp();
+  const isAr = locale === 'ar';
+  const ArrowIcon = isRtl ? ArrowLeft : ArrowRight;
+
+  const [selectedSector, setSelectedSector] = useState<SectorKey | null>(null);
+  const [hoveredSector, setHoveredSector] = useState<SectorKey | null>(null);
+
+  const focusedSectorKey = hoveredSector ?? selectedSector;
+  const focusedSector = focusedSectorKey ? getSectorByKey(focusedSectorKey) : null;
+
+  const homePage = bootstrap?.pages.find((p) => p.slug === 'home');
+  const tr = homePage?.translation;
+  const sections = (tr?.sectionsJson || {}) as Record<string, string>;
+
+  const services = bootstrap?.services || [];
+  const partners = bootstrap?.partners || [];
+  const featuredProducts = (bootstrap?.products || []).slice(0, 3);
+  const featuredProjects = (bootstrap?.projects || []).slice(0, 3);
+
+  const renderSectorIcon = (iconName: SectorDefinition['iconName'], className = 'w-5 h-5') => {
+    switch (iconName) {
+      case 'Cog':
+        return <Cog className={className} aria-hidden="true" />;
+      case 'HardHat':
+        return <HardHat className={className} aria-hidden="true" />;
+      case 'Building2':
+        return <Building2 className={className} aria-hidden="true" />;
+      case 'Stethoscope':
+        return <Stethoscope className={className} aria-hidden="true" />;
+      case 'Sun':
+        return <Sun className={className} aria-hidden="true" />;
+    }
+  };
+
+  const renderServiceIcon = (iconName: string) => {
+    switch (iconName) {
+      case 'Sprout':
+        return <Sprout className="w-8 h-8 text-white" aria-hidden="true" />;
+      case 'Gauge':
+        return <Gauge className="w-8 h-8 text-white" aria-hidden="true" />;
+      case 'Waves':
+        return <Waves className="w-8 h-8 text-white" aria-hidden="true" />;
+      case 'Droplets':
+        return <Droplets className="w-8 h-8 text-white" aria-hidden="true" />;
+      case 'Snowflake':
+        return <Snowflake className="w-8 h-8 text-white" aria-hidden="true" />;
+      case 'Flame':
+        return <Flame className="w-8 h-8 text-white" aria-hidden="true" />;
+      default:
+        return <Droplets className="w-8 h-8 text-white" aria-hidden="true" />;
+    }
+  };
+
+  const scrollToSectors = () => {
+    document.getElementById('business-sectors')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const handleTileClick = (sector: SectorDefinition) => {
+    if (selectedSector === sector.key) {
+      navigate(sector.route);
+    } else {
+      setSelectedSector(sector.key);
+    }
+  };
+
+  return (
+    <div>
+      {/* 1. PREMIUM 3D DIVERSIFIED HOLDING COMPANY HERO */}
+      <section className="relative min-h-[92vh] sm:min-h-[95vh] bg-[#051020] text-white overflow-hidden flex flex-col justify-between">
+        {/* Procedural Architectural 3D Campus Canvas */}
+        <HeroCampus3D
+          activeSector={focusedSectorKey}
+          isRtl={isRtl}
+          onHoverSector={setHoveredSector}
+          onSelectSector={(key) => {
+            setSelectedSector((prev) => (prev === key ? key : key));
+          }}
+        />
+
+        {/* Directional readability scrim without backdrop-blur over WebGL */}
+        <div
+          className={`pointer-events-none absolute inset-0 z-[1] ${
+            isRtl
+              ? 'bg-gradient-to-l from-[#040E1D]/92 via-[#051428]/68 to-[#051428]/20'
+              : 'bg-gradient-to-r from-[#040E1D]/92 via-[#051428]/68 to-[#051428]/20'
+          }`}
+          aria-hidden="true"
+        />
+        <div
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-[#040E1D]/95 via-[#040E1D]/55 to-transparent z-[1]"
+          aria-hidden="true"
+        />
+
+        {/* Main Hero Foreground Content */}
+        <div className="relative z-10 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 pb-8 flex-1 flex flex-col justify-between gap-8">
+          <div className="max-w-2xl space-y-5 my-auto pt-4">
+            <div className="inline-flex items-center gap-2.5 text-[11px] sm:text-xs font-semibold tracking-[0.18em] uppercase text-sky-300">
+              <span className="w-5 h-0.5 bg-[#D93829]" aria-hidden="true" />
+              <span>
+                {isAr
+                  ? 'مجموعة واحدة · قطاعات متعددة · رؤية موحدة'
+                  : 'ONE GROUP · MULTIPLE INDUSTRIES · ONE VISION'}
+              </span>
+            </div>
+
+            <h1
+              className="font-display font-extrabold tracking-tight text-white leading-[1.08] whitespace-pre-line"
+              style={{ fontSize: 'clamp(2.1rem, 4.3vw, 3.65rem)', textWrap: 'balance' }}
+            >
+              {tr?.heroHeading ||
+                (isAr
+                  ? 'أكثر من مجرد مجموعة...\nرؤية تجمع قطاعات متعددة.'
+                  : 'MORE THAN A GROUP.\nA VISION THAT CONNECTS INDUSTRIES.')}
+            </h1>
+
+            <p className="text-sm sm:text-base lg:text-[17px] text-slate-200 leading-relaxed max-w-xl">
+              {tr?.heroSubheading ||
+                (isAr
+                  ? 'تجمع مجموعة يونايتد بارك قطاعات متنوعة تشمل الحلول الصناعية والهندسية، والمقاولات، والتطوير العقاري، والرعاية الصحية، والطاقة المتجددة، ضمن رؤية موحدة للنمو والاستدامة.'
+                  : 'UNITED PARK GROUP brings together diverse businesses across industrial engineering, contracting, real estate development, healthcare, and renewable energy — creating integrated opportunities for sustainable growth and a stronger future.')}
+            </p>
+
+            {/* Primary & Secondary CTAs */}
+            <div className="pt-2 flex flex-wrap items-center gap-3.5">
+              <button
+                type="button"
+                onClick={scrollToSectors}
+                className="inline-flex items-center gap-2.5 px-6 sm:px-7 py-3.5 text-xs sm:text-sm font-bold tracking-wide uppercase text-white bg-[#16528E] hover:bg-[#1B64AC] rounded-md shadow-lg transition-colors min-h-[44px]"
+              >
+                <span>
+                  {tr?.heroCtaText || (isAr ? 'استكشف قطاعات المجموعة' : 'EXPLORE OUR GROUP')}
+                </span>
+                <ArrowIcon className="w-4 h-4" aria-hidden="true" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => navigate('/contact')}
+                className="inline-flex items-center gap-2 px-6 py-3.5 text-xs sm:text-sm font-semibold tracking-wide uppercase text-white bg-[#091A32]/85 border border-white/30 hover:bg-[#10294B] rounded-md transition-colors min-h-[44px]"
+              >
+                <span>{isAr ? 'تواصل معنا' : 'GET IN TOUCH'}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Interactive Sector Focus Bar + 5-Tile Sector Dock */}
+          <div className="space-y-3">
+            {focusedSector && (
+              <div className="bg-[#071528]/92 border border-white/15 rounded-lg px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 max-w-4xl">
+                <div className="flex items-start sm:items-center gap-3">
+                  <span
+                    className="w-8 h-8 rounded-md flex items-center justify-center shrink-0 text-white"
+                    style={{ backgroundColor: focusedSector.accentHex }}
+                  >
+                    {renderSectorIcon(focusedSector.iconName, 'w-4 h-4')}
+                  </span>
+                  <div className="space-y-0.5">
+                    <div className="flex items-center gap-2 text-[11px] font-mono-tabular uppercase tracking-wider text-sky-300">
+                      <span>{isAr ? `القطاع ${focusedSector.zoneCode}` : `Sector ${focusedSector.zoneCode}`}</span>
+                      <span aria-hidden="true">·</span>
+                      <span className="text-slate-300">
+                        {isAr ? focusedSector.ar.subtitle : focusedSector.en.subtitle}
+                      </span>
+                    </div>
+                    <p className="text-sm sm:text-base font-bold text-white">
+                      {isAr ? focusedSector.ar.title : focusedSector.en.title}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  {selectedSector && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedSector(null);
+                        setHoveredSector(null);
+                      }}
+                      className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-300 hover:text-white border border-white/15 rounded-md"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
+                      <span>{isAr ? 'نظرة عامة' : 'Overview'}</span>
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => navigate(focusedSector.route)}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-[#D93829] hover:bg-[#B92B1D] rounded-md transition-colors"
+                  >
+                    <span>{isAr ? 'استكشف القطاع' : 'Explore Sector'}</span>
+                    <ArrowIcon className="w-3.5 h-3.5" aria-hidden="true" />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Five-Tile Sector Dock (Below Hero Copy & CTAs) */}
+            <div
+              className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3"
+              role="region"
+              aria-label={isAr ? 'محدد قطاعات المجموعة' : 'Interactive group sector selector'}
+            >
+              {GROUP_SECTORS.map((sec) => {
+                const isActive = focusedSectorKey === sec.key;
+                return (
+                  <button
+                    key={sec.key}
+                    type="button"
+                    onMouseEnter={() => setHoveredSector(sec.key)}
+                    onMouseLeave={() => setHoveredSector(null)}
+                    onFocus={() => setHoveredSector(sec.key)}
+                    onBlur={() => setHoveredSector(null)}
+                    onClick={() => handleTileClick(sec)}
+                    className={`group text-start rounded-lg px-3.5 py-3 border transition-colors flex items-center gap-3 min-h-[60px] ${
+                      isActive
+                        ? 'bg-[#12325C] border-sky-400 text-white shadow-md'
+                        : 'bg-[#071528]/88 border-white/15 text-slate-200 hover:bg-[#0D2342] hover:border-white/35'
+                    }`}
+                  >
+                    <span
+                      className={`w-9 h-9 rounded-md flex items-center justify-center shrink-0 transition-colors ${
+                        isActive
+                          ? 'bg-[#D93829] text-white'
+                          : 'bg-[#10294B] text-sky-300 group-hover:text-white'
+                      }`}
+                    >
+                      {renderSectorIcon(sec.iconName, 'w-4 h-4')}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[10px] font-mono-tabular text-slate-400 leading-none mb-1">
+                        {sec.zoneCode}
+                      </span>
+                      <span className="block text-xs sm:text-[13px] font-semibold leading-tight truncate">
+                        {isAr ? sec.ar.shortLabel : sec.en.shortLabel}
+                      </span>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Subtle Scroll Indicator */}
+            <div className="flex items-center justify-between pt-1 text-xs text-slate-400">
+              <button
+                type="button"
+                onClick={scrollToSectors}
+                className="inline-flex items-center gap-1.5 text-slate-300 hover:text-white transition-colors"
+              >
+                <ChevronDown className="w-4 h-4 text-sky-300" aria-hidden="true" />
+                <span>
+                  {isAr
+                    ? 'مرر لاستكشاف قطاعات الأعمال الخمسة'
+                    : 'Scroll to explore our five business sectors · Click any 3D zone'}
+                </span>
+              </button>
+              <span className="hidden md:inline font-mono-tabular text-[11px] text-slate-400">
+                {isAr ? 'جدة · المملكة العربية السعودية · منذ ١٩٨٩' : 'JEDDAH, KSA · EST. 1989'}
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 2. IMMEDIATE POST-HERO SECTION: OUR BUSINESS SECTORS (5 EQUAL SECTORS) */}
+      <section id="business-sectors" className="bg-white py-16 sm:py-22 border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-12">
+            <div className="max-w-2xl space-y-2.5">
+              <p className="text-xs font-semibold tracking-[0.18em] uppercase text-[#D93829]">
+                {isAr ? 'مجموعة واحدة · خمسة قطاعات استراتيجية' : 'ONE GROUP · FIVE STRATEGIC PILLARS'}
+              </p>
+              <h2 className="text-3xl sm:text-4xl font-extrabold text-[#133D68] tracking-tight">
+                {isAr ? 'قطاعات أعمالنا' : 'OUR BUSINESS SECTORS'}
+              </h2>
+              <p className="text-slate-600 text-base leading-relaxed">
+                {isAr
+                  ? 'تعمل مجموعة بارك المتحدة عبر خمسة قطاعات متكاملة تسهم في تطوير البنية التحتية الصناعية والعمرانية والصحية والطاقة المستدامة في المملكة.'
+                  : 'United Park Group operates across five diversified industries united by shared corporate governance, engineering rigor, and long-term regional investment.'}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => navigate('/about')}
+              className="inline-flex items-center gap-2 text-sm font-semibold text-[#133D68] hover:underline whitespace-nowrap shrink-0"
+            >
+              <span>{isAr ? 'تعرف على المجموعة' : 'Group Corporate Profile'}</span>
+              <ArrowIcon className="w-4 h-4" aria-hidden="true" />
+            </button>
+          </div>
+
+          {/* Symmetrical 6-column grid: top 3 sectors span 2 cols each; bottom 2 sectors span 3 cols each */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
+            {GROUP_SECTORS.map((sector, idx) => {
+              const cmsPage = bootstrap?.pages.find((p) => p.slug === sector.pageSlug);
+              const cmsTitle = cmsPage?.translation?.title;
+              const cmsSummary = cmsPage?.translation?.heroSubheading;
+              const localized = isAr ? sector.ar : sector.en;
+              const colSpanClass = idx < 3 ? 'lg:col-span-2' : 'lg:col-span-3';
+
+              return (
+                <article
+                  key={sector.key}
+                  className={`${colSpanClass} group border border-slate-200 rounded-xl overflow-hidden bg-white hover:border-[#133D68]/60 transition-colors flex flex-col justify-between`}
+                >
+                  <div>
+                    <div className="relative h-48 bg-[#0B1E33] overflow-hidden">
+                      <ResilientImage
+                        src={cmsPage?.heroImageUrl || sector.imageUrl}
+                        alt={cmsTitle || localized.title}
+                        className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
+                      />
+                      <div
+                        className="absolute inset-0 bg-gradient-to-t from-[#071528]/90 via-[#071528]/35 to-transparent"
+                        aria-hidden="true"
+                      />
+                      <div className="absolute bottom-4 inset-x-5 flex items-center justify-between gap-3">
+                        <span
+                          className="w-10 h-10 rounded-lg flex items-center justify-center text-white shadow-md"
+                          style={{ backgroundColor: sector.accentHex }}
+                        >
+                          {renderSectorIcon(sector.iconName, 'w-5 h-5')}
+                        </span>
+                        <span className="text-xs font-mono-tabular font-semibold text-white/85">
+                          {sector.zoneCode}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="p-6 space-y-3">
+                      <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                        {localized.subtitle}
+                      </p>
+                      <h3 className="text-xl font-bold text-slate-900 tracking-tight">
+                        {cmsTitle || localized.title}
+                      </h3>
+                      <p className="text-sm text-slate-600 leading-relaxed">
+                        {cmsSummary || localized.summary}
+                      </p>
+                      <ul className="pt-2 space-y-1.5 border-t border-slate-100">
+                        {localized.highlights.map((item) => (
+                          <li key={item} className="flex items-center gap-2 text-xs text-slate-700">
+                            <ArrowRightCircle
+                              className={`w-3.5 h-3.5 text-[#133D68] shrink-0 ${isRtl ? 'rotate-180' : ''}`}
+                              aria-hidden="true"
+                            />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div className="px-6 py-4 bg-[#F8FAFC] border-t border-slate-100 flex items-center justify-between">
+                    <button
+                      type="button"
+                      onClick={() => navigate(sector.route)}
+                      className="inline-flex items-center gap-2 text-sm font-bold text-[#133D68] hover:text-[#D93829] transition-colors"
+                    >
+                      <span>{isAr ? 'استكشف المزيد' : 'Explore More'}</span>
+                      <ArrowIcon className="w-4 h-4" aria-hidden="true" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedSector(sector.key);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      className="text-xs font-medium text-slate-500 hover:text-[#133D68]"
+                    >
+                      {isAr ? 'عرض في المجسم ٣D' : 'Focus in 3D'}
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* 3. Corporate Holding Banner */}
+      <section className="bg-[#133D68] text-white border-b border-white/10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-start">
+          <p className="text-base sm:text-lg font-medium text-slate-100 max-w-2xl leading-relaxed">
+            {tr?.introBannerText ||
+              (isAr
+                ? 'منذ عام ١٩٨٩ في جدة، نربط قطاعات الصناعة والمقاولات والعقار والرعاية الصحية والطاقة المتجددة بشراكات عالمية موثوقة.'
+                : 'Founded in Jeddah in 1989 — uniting global industrial partnerships, contracting execution, urban real estate, healthcare, and clean energy.')}
+          </p>
+          <button
+            type="button"
+            onClick={() => navigate('/quote')}
+            className="px-6 py-3 text-sm font-semibold text-[#133D68] bg-white hover:bg-slate-100 rounded-md transition-colors whitespace-nowrap shrink-0 min-h-[44px]"
+          >
+            {tr?.introBannerCtaText || (isAr ? 'اطلب عرض سعر' : 'Request Group Inquiry')}
+          </button>
+        </div>
+      </section>
+
+      {/* 4. Global Partners Showcase Carousel */}
+      <section className="bg-[#F4F6F9] py-16 sm:py-20 border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10">
+            <div>
+              <h2 className="text-2xl sm:text-3xl font-bold text-[#133D68] tracking-tight">
+                {isAr ? 'شركاؤنا المصنّعون العالميون' : 'Global Technology & Industrial Partners'}
+              </h2>
+              <p className="mt-2 text-slate-600 text-base">
+                {isAr
+                  ? 'وكلاء وموزعون معتمدون لأبرز العلامات العالمية في تقنيات المياه والصناعة والسلامة.'
+                  : 'Authorized Saudi distributor and technical support partner for world-renowned manufacturers.'}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => navigate('/partners')}
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#133D68] hover:underline whitespace-nowrap"
+            >
+              <span>{isAr ? 'صفحة الشركاء' : 'All Partners'}</span>
+              <ArrowIcon className="w-4 h-4" aria-hidden="true" />
+            </button>
+          </div>
+
+          <PartnerCarousel partners={partners} />
+        </div>
+      </section>
+
+      {/* 5. Core Capabilities (Industrial & Engineering Division Showcase) */}
+      <section className="bg-white py-16 sm:py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-12">
+            <div className="max-w-2xl">
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
+                {isAr ? 'قطاع الحلول الصناعية والهندسية' : 'Industrial & Engineering Sector'}
+              </p>
+              <h2 className="text-2xl sm:text-3xl font-bold text-[#133D68] tracking-tight">
+                {isAr ? 'قدراتنا الهندسية المتخصصة' : 'Core Engineering Capabilities'}
+              </h2>
+              <p className="mt-3 text-slate-600 text-base leading-relaxed">
+                {isAr
+                  ? 'مجموعة متكاملة من أنظمة الضخ ومعالجة المياه والتبريد والتدفئة المصممة لظروف التشغيل في المملكة.'
+                  : 'Integrated pumping, treatment, and thermal fluid systems engineered for demanding commercial, agricultural, and municipal operations.'}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => navigate('/services')}
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#133D68] hover:underline whitespace-nowrap"
+            >
+              <span>{isAr ? 'جميع الخدمات الهندسية' : 'All Engineering Services'}</span>
+              <ArrowIcon className="w-4 h-4" aria-hidden="true" />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {services.map((srv, idx) => (
+              <div
+                key={srv.id}
+                className="flex flex-col items-center text-center p-7 rounded-xl border border-slate-200 bg-white hover:border-[#133D68]/40 transition-colors"
+              >
+                <div className="w-18 h-18 rounded-full bg-[#133D68] flex items-center justify-center mb-5 shadow-sm">
+                  {renderServiceIcon(srv.iconName)}
+                </div>
+                <span className="text-xs font-mono-tabular font-semibold text-slate-400 mb-1">
+                  0{idx + 1}
+                </span>
+                <h3 className="text-lg font-bold text-slate-900 tracking-tight">
+                  {srv.translation?.title || srv.slug}
+                </h3>
+                <p className="mt-2.5 text-sm text-slate-600 leading-relaxed">
+                  {srv.translation?.shortDescription}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 6. Corporate Story & Catalog Banner */}
+      <section className="bg-[#F4F6F9] py-16 sm:py-20 border-y border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+            <div className="lg:col-span-6 rounded-xl overflow-hidden border border-slate-200 bg-white min-h-[280px]">
+              <ResilientImage
+                src={sections.facilityImageUrl || '/images/facility-pump-room.jpg'}
+                alt={isAr ? 'منشأة ومشاريع مجموعة بارك المتحدة' : 'United Park Group engineering installation'}
+                className="w-full h-full object-cover"
+              />
+            </div>
+
+            <div className="lg:col-span-6 flex flex-col justify-between bg-white border border-slate-200 rounded-xl p-7 sm:p-10 space-y-6">
+              <div className="space-y-4">
+                <p className="text-xs font-semibold uppercase tracking-wider text-[#133D68]">
+                  {isAr ? 'منذ ١٩٨٩ · جدة' : 'Group Heritage & Presence · Since 1989'}
+                </p>
+                <blockquote className="text-lg sm:text-xl font-medium text-slate-900 leading-relaxed">
+                  “{sections.quoteText ||
+                    (isAr
+                      ? 'تعمل مجموعة بارك المتحدة على بناء منظومة متكاملة تجمع الحلول الصناعية والمقاولات والتطوير العقاري والرعاية الصحية والطاقة المتجددة تحت رؤية واحدة.'
+                      : 'United Park Group unites global engineering partnerships, contracting execution, urban real estate, healthcare facilities, and solar energy under one accountable corporate umbrella.')}”
+                </blockquote>
+                <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
+                  {tr?.bodyContent}
+                </p>
+              </div>
+
+              <div className="pt-4 border-t border-slate-100 flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={() => navigate('/about')}
+                  className="inline-flex items-center gap-2 text-sm font-semibold text-[#133D68] hover:underline"
+                >
+                  <span>{isAr ? 'اقرأ المزيد عن بارك المتحدة' : 'Read Corporate Profile'}</span>
+                  <ArrowIcon className="w-4 h-4" aria-hidden="true" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-[#0E2E50] text-white rounded-xl p-8 sm:p-10 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="space-y-1 text-center md:text-start">
+              <h3 className="text-xl font-bold">
+                {sections.storeBannerText ||
+                  (isAr
+                    ? 'تصفح كتالوج المنتجات للاطلاع على الأنظمة الصناعية والهندسية.'
+                    : 'Explore our technical catalog for industrial pumping, controls, and solar equipment.')}
+              </h3>
+              <p className="text-sm text-slate-300">
+                {isAr
+                  ? 'مواصفات فنية تفصيلية وطلب تسعير فوري للمشاريع.'
+                  : 'Detailed engineering specifications and instant project quotation requests.'}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => navigate('/products')}
+              className="px-7 py-3 bg-white text-[#133D68] font-bold text-sm rounded-md hover:bg-slate-100 transition-colors whitespace-nowrap shrink-0 min-h-[44px]"
+            >
+              {sections.storeBannerCta || (isAr ? 'تصفح الكتالوج' : 'View Products')}
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* 7. Featured Industrial & Engineering Systems */}
+      {featuredProducts.length > 0 && (
+        <section className="bg-white py-16 sm:py-20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10">
+              <div>
+                <h2 className="text-2xl sm:text-3xl font-bold text-[#133D68] tracking-tight">
+                  {isAr ? 'أنظمة ومنتجات مختارة' : 'Featured Engineering Systems'}
+                </h2>
+                <p className="mt-2 text-slate-600 text-sm sm:text-base">
+                  {isAr
+                    ? 'أنظمة ضخ ومعدات هندسية معتمدة لتطبيقات المباني والمشاريع الصناعية.'
+                    : 'Certified equipment packages engineered for commercial, healthcare, renewable, and municipal sites.'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => navigate('/products')}
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#133D68] hover:underline whitespace-nowrap"
+              >
+                <span>{isAr ? 'عرض جميع المنتجات' : 'All Products'}</span>
+                <ArrowIcon className="w-4 h-4" aria-hidden="true" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {featuredProducts.map((prod) => (
+                <article
+                  key={prod.id}
+                  className="border border-slate-200 rounded-xl overflow-hidden bg-white flex flex-col justify-between hover:border-[#133D68]/50 transition-colors"
+                >
+                  <div>
+                    <div className="aspect-[4/3] bg-slate-100 overflow-hidden">
+                      <ResilientImage
+                        src={prod.imageUrl}
+                        alt={prod.translation?.name || prod.sku}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="p-6 space-y-2.5">
+                      <div className="flex items-center gap-2 text-xs text-slate-500 font-mono-tabular">
+                        <span>{prod.sku}</span>
+                        <span aria-hidden="true">·</span>
+                        <span className="capitalize">{prod.division}</span>
+                      </div>
+                      <h3 className="text-lg font-bold text-slate-900">
+                        {prod.translation?.name || prod.sku}
+                      </h3>
+                      <p className="text-sm text-slate-600 leading-relaxed">
+                        {prod.translation?.summary}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-between gap-3">
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/products/${prod.slug}`)}
+                      className="text-xs font-semibold text-[#133D68] hover:underline"
+                    >
+                      {isAr ? 'المواصفات الفنية' : 'Specifications'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPreselectedProduct(prod.translation?.name || prod.sku);
+                        navigate('/quote');
+                      }}
+                      className="px-3.5 py-2 text-xs font-semibold text-white bg-[#133D68] hover:bg-[#0C2B4B] rounded-md transition-colors"
+                    >
+                      {isAr ? 'اطلب تسعير' : 'Request Quote'}
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* 8. Selected Projects & Why Choose PARK */}
+      <section className="bg-[#F4F6F9] py-16 sm:py-20 border-t border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-14">
+          <div>
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+              <div>
+                <h2 className="text-2xl sm:text-3xl font-bold text-[#133D68] tracking-tight">
+                  {isAr ? 'مشاريع ومرجعيات مختارة' : 'Selected Reference Projects'}
+                </h2>
+                <p className="mt-2 text-slate-600 text-base">
+                  {isAr
+                    ? 'تجهيز وتنفيذ مشاريع حيوية لمؤسسات رائدة في المملكة.'
+                    : 'Documented infrastructure, healthcare, campus, and industrial installations serving Saudi institutions.'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => navigate('/projects')}
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#133D68] hover:underline whitespace-nowrap"
+              >
+                <span>{isAr ? 'عرض جميع المشاريع' : 'View Projects'}</span>
+                <ArrowIcon className="w-4 h-4" aria-hidden="true" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {featuredProjects.map((prj) => (
+                <article
+                  key={prj.id}
+                  onClick={() => navigate(`/projects/${prj.slug}`)}
+                  className="cursor-pointer bg-white border border-slate-200 rounded-xl overflow-hidden hover:border-[#133D68]/50 transition-colors flex flex-col"
+                >
+                  <div className="aspect-[16/10] bg-slate-100 overflow-hidden">
+                    <ResilientImage
+                      src={prj.imageUrl}
+                      alt={prj.translation?.title || prj.slug}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="p-6 space-y-2">
+                    <div className="flex items-center gap-2 text-xs text-slate-500">
+                      <span>{prj.category}</span>
+                      <span aria-hidden="true">·</span>
+                      <span>{isAr ? prj.locationAr : prj.locationEn}</span>
+                    </div>
+                    <h3 className="text-base font-bold text-slate-900">
+                      {prj.translation?.title}
+                    </h3>
+                    <p className="text-sm text-slate-600 line-clamp-2">
+                      {prj.translation?.summary}
+                    </p>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+
+          {/* Why Choose PARK */}
+          <div className="bg-[#133D68] text-white rounded-xl p-8 sm:p-12">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+              <div className="lg:col-span-5 space-y-3">
+                <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
+                  {isAr ? 'لماذا مجموعة بارك المتحدة؟' : 'Why Choose UNITED PARK GROUP'}
+                </h2>
+                <p className="text-slate-200 text-sm sm:text-base leading-relaxed">
+                  {isAr
+                    ? 'مسؤولية مؤسسية متكاملة عبر خمسة قطاعات من الاستشارة الأولية والتوريد حتى التنفيذ والضمان في جميع مناطق المملكة.'
+                    : 'Single-group accountability uniting engineering supply, contracting, real estate, healthcare facilities, and renewable energy across Saudi Arabia.'}
+                </p>
+              </div>
+              <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-5">
+                {[
+                  {
+                    icon: Shield,
+                    en: 'Diversified Holding Strength',
+                    ar: 'قوة مجموعة متعددة القطاعات',
+                    subEn: 'Five complementary industries operating under unified governance since 1989.',
+                    subAr: 'خمسة قطاعات متكاملة تعمل تحت حوكمة مؤسسية موحدة منذ عام ١٩٨٩.',
+                  },
+                  {
+                    icon: Wrench,
+                    en: 'Free Initial Technical Consultation',
+                    ar: 'استشارة هندسية وفنية مجانية',
+                    subEn: 'Accurate project scoping, system sizing, and cross-sector coordination.',
+                    subAr: 'دراسة دقيقة للمشاريع وتنسيق هندسي متكامل عبر القطاعات.',
+                  },
+                  {
+                    icon: CheckCircle2,
+                    en: 'Authorized Global OEM Partnerships',
+                    ar: 'شراكات ومعدات أصلية معتمدة',
+                    subEn: 'Direct sourcing from Grundfos, Reflex, GWS, Bristol Fire & Ameriflo.',
+                    subAr: 'توريد مباشر من جراندفوس وريفلكس وجلوبال ووتر وبريستول وأميريفلو.',
+                  },
+                  {
+                    icon: CheckCircle2,
+                    en: 'Kingdom-Wide Delivery & 24-Month Support',
+                    ar: 'تغطية شاملة وضمان ٢٤ شهراً',
+                    subEn: 'Serving Jeddah, Makkah, Madinah, Yanbu, Buraidah & Qunfudah.',
+                    subAr: 'خدمة مشاريع جدة ومكة والمدينة وينبع وبريدة والقنفذة.',
+                  },
+                ].map((item) => {
+                  const IconComp = item.icon;
+                  return (
+                    <div key={item.en} className="p-4 rounded-lg bg-white/10 border border-white/15 space-y-1.5">
+                      <div className="flex items-center gap-2 font-semibold text-sm">
+                        <IconComp className="w-4 h-4 text-sky-300 shrink-0" aria-hidden="true" />
+                        <span>{isAr ? item.ar : item.en}</span>
+                      </div>
+                      <p className="text-xs text-slate-200 leading-relaxed">
+                        {isAr ? item.subAr : item.subEn}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+};

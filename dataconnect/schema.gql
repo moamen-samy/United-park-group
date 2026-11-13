@@ -1,0 +1,45 @@
+# Reference Firebase SQL Connect (Data Connect) Schema matching src/db/schema.ts
+
+type WebsiteSettings @table(name: "website_settings") {
+  id: Int! @default(expr: "serial")
+  siteKey: String! @col(name: "site_key") @unique
+  companyNameEn: String! @col(name: "company_name_en")
+  companyNameAr: String! @col(name: "company_name_ar")
+  addressEn: String! @col(name: "address_en")
+  addressAr: String! @col(name: "address_ar")
+  phone: String!
+  email: String!
+}
+
+type Product @table(name: "products") {
+  id: Int! @default(expr: "serial")
+  sku: String! @unique
+  slug: String! @unique
+  imageUrl: String @col(name: "image_url")
+  division: String!
+  isFeatured: Boolean! @col(name: "is_featured")
+  isPublished: Boolean! @col(name: "is_published")
+}
+
+type Partner @table(name: "partners") {
+  id: Int! @default(expr: "serial")
+  slug: String! @unique
+  name: String!
+  logoUrl: String @col(name: "logo_url")
+  websiteUrl: String @col(name: "website_url")
+  country: String
+  isPublished: Boolean! @col(name: "is_published")
+}
+
+type QuoteRequest @table(name: "quote_requests") {
+  id: Int! @default(expr: "serial")
+  fullName: String! @col(name: "full_name")
+  companyName: String! @col(name: "company_name")
+  businessEmail: String! @col(name: "business_email")
+  phone: String!
+  productOrService: String! @col(name: "product_or_service")
+  estimatedQuantity: String @col(name: "estimated_quantity")
+  projectDescription: String! @col(name: "project_description")
+  preferredContactMethod: String! @col(name: "preferred_contact_method")
+  status: String!
+}
