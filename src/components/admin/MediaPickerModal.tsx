@@ -4,6 +4,11 @@ import { AdminLang, AdminOverviewPayload } from './AdminTypes';
 import { tAdmin } from './AdminTranslations';
 
 const STATIC_CORPORATE_ASSETS = [
+  {
+    url: '/assets/aistudio/image_ad8ad2f2-dc9e-407d-af3f-5c7149625b89_6b02dcf2.jpg',
+    name: 'Official United Park Co. (PARK) Logo',
+    folder: 'general',
+  },
   { url: '/images/hero-pumps.jpg', name: 'Corporate Hero Pumping Facility', folder: 'banners' },
   { url: '/images/facility-pump-room.jpg', name: 'Industrial Pump Room', folder: 'projects' },
   { url: '/images/sector-utilities.jpg', name: 'Utilities & Solar Energy Infrastructure', folder: 'sectors' },

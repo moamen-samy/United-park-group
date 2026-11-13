@@ -1,54 +1,39 @@
 import React from 'react';
 
+export const OFFICIAL_PARK_LOGO_URL =
+  '/assets/aistudio/image_ad8ad2f2-dc9e-407d-af3f-5c7149625b89_6b02dcf2.jpg';
+
 interface BrandMarkProps {
   variant?: 'light' | 'dark';
   compact?: boolean;
+  src?: string | null;
+  alt?: string;
 }
 
-export const ParkLogo: React.FC<BrandMarkProps> = ({ variant = 'dark', compact = false }) => {
-  const primaryColor = variant === 'light' ? '#FFFFFF' : '#133D68';
-  const subColor = variant === 'light' ? '#CBD5E1' : '#64748B';
-  const swooshColor = variant === 'light' ? '#94A3B8' : '#CBD5E1';
+export const ParkLogo: React.FC<BrandMarkProps> = ({
+  variant = 'dark',
+  compact = false,
+  src,
+  alt = 'United Park Co. — شركة بارك المتحدة (PARK)',
+}) => {
+  const logoSrc = src && src.trim().length > 0 ? src : OFFICIAL_PARK_LOGO_URL;
+
+  const wrapperClass =
+    variant === 'light'
+      ? compact
+        ? 'inline-flex items-center justify-center bg-white rounded-md px-2 py-0.5 shadow-xs shrink-0 select-none'
+        : 'inline-flex items-center justify-center bg-white rounded-lg px-3 py-1.5 shadow-sm shrink-0 select-none'
+      : compact
+        ? 'inline-flex items-center justify-center bg-white rounded-md px-1 py-0.5 shrink-0 select-none'
+        : 'inline-flex items-center justify-center bg-white rounded-lg px-2 py-1 shrink-0 select-none';
+
+  const imgClass = compact
+    ? 'h-9 sm:h-10 w-auto max-w-[150px] object-contain block'
+    : 'h-14 sm:h-16 w-auto max-w-[190px] object-contain block';
 
   return (
-    <span className="inline-flex items-center gap-2.5 select-none whitespace-nowrap shrink-0">
-      <svg
-        width={compact ? 30 : 36}
-        height={compact ? 30 : 36}
-        viewBox="0 0 40 40"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        aria-hidden="true"
-        className="shrink-0"
-      >
-        {/* Reconstructed curved arch & corporate P emblem matching PARK brand */}
-        <path
-          d="M6 16C6 9.373 11.373 4 18 4H26C30.418 4 34 7.582 34 12C34 16.418 30.418 20 26 20H18"
-          stroke={swooshColor}
-          strokeWidth="3.2"
-          strokeLinecap="round"
-        />
-        <path
-          d="M12 34V10H22.5C26.09 10 29 12.686 29 16C29 19.314 26.09 22 22.5 22H16.5V34H12Z"
-          fill={primaryColor}
-        />
-      </svg>
-      <span className="flex flex-col leading-none">
-        <span
-          className="font-display font-extrabold tracking-tight text-lg sm:text-xl"
-          style={{ color: primaryColor }}
-        >
-          PARK
-        </span>
-        {!compact && (
-          <span
-            className="text-[10px] font-medium tracking-wide mt-0.5"
-            style={{ color: subColor }}
-          >
-            شركة بارك المتحدة · UNITED PARK
-          </span>
-        )}
-      </span>
+    <span className={wrapperClass}>
+      <img src={logoSrc} alt={alt} className={imgClass} />
     </span>
   );
 };

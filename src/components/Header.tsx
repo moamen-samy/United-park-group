@@ -67,15 +67,15 @@ export const Header: React.FC = () => {
           }`}
           aria-label="United Park Group Home"
         >
-          {bootstrap?.settings?.logoUrl ? (
-            <img
-              src={bootstrap.settings.logoUrl}
-              alt={isAr ? bootstrap.settings.companyNameAr : bootstrap.settings.companyNameEn}
-              className="h-9 max-w-[160px] object-contain"
-            />
-          ) : (
-            <ParkLogo variant={isHeroDark ? 'light' : 'dark'} compact />
-          )}
+          <ParkLogo
+            variant={isHeroDark ? 'light' : 'dark'}
+            compact
+            src={bootstrap?.settings?.logoUrl}
+            alt={
+              (isAr ? bootstrap?.settings?.companyNameAr : bootstrap?.settings?.companyNameEn) ||
+              'United Park Co. — شركة بارك المتحدة'
+            }
+          />
         </button>
 
         {/* Zone 2: Desktop 5-link single-line navigation */}
@@ -242,8 +242,16 @@ export const Header: React.FC = () => {
             }`}
             aria-label="Mobile navigation"
           >
-            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 bg-[#133D68] text-white">
-              <ParkLogo variant="light" compact />
+            <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 bg-[#133D68] text-white">
+              <ParkLogo
+                variant="light"
+                compact
+                src={bootstrap?.settings?.logoUrl}
+                alt={
+                  (isAr ? bootstrap?.settings?.companyNameAr : bootstrap?.settings?.companyNameEn) ||
+                  'United Park Co. — شركة بارك المتحدة'
+                }
+              />
               <button
                 type="button"
                 onClick={() => setMobileOpen(false)}

@@ -295,18 +295,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       el.setAttribute(attr, value);
     };
 
+    const origin = window.location.origin;
+    const defaultLogoPath =
+      bootstrap.settings?.logoUrl?.trim() ||
+      '/assets/aistudio/image_ad8ad2f2-dc9e-407d-af3f-5c7149625b89_6b02dcf2.jpg';
+    const resolvedOgImage = matchedSeo?.ogImageUrl?.trim() || defaultLogoPath;
+
     setMeta('meta[name="description"]', 'content', desc);
     setMeta('meta[name="robots"]', 'content', matchedSeo?.noIndex ? 'noindex, nofollow' : 'index, follow');
     setMeta('meta[property="og:title"]', 'content', matchedSeo?.ogTitle || title);
     setMeta('meta[property="og:description"]', 'content', matchedSeo?.ogDescription || desc);
     setMeta('meta[property="og:type"]', 'content', matchedSeo?.ogType || 'website');
-    if (matchedSeo?.ogImageUrl) {
-      setMeta('meta[property="og:image"]', 'content', matchedSeo.ogImageUrl);
-    }
+    setMeta('meta[property="og:image"]', 'content', resolvedOgImage);
     setMeta('meta[name="twitter:title"]', 'content', title);
     setMeta('meta[name="twitter:description"]', 'content', desc);
-
-    const origin = window.location.origin;
+    setMeta('meta[name="twitter:image"]', 'content', resolvedOgImage);
     const canonicalHref = `${origin}${locale === 'ar' ? (currentPath === '/' ? '/ar' : `/ar${currentPath}`) : currentPath}`;
 
     const ensureLink = (id: string, rel: string, href: string, hreflang?: string) => {
@@ -346,6 +349,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       name: bootstrap.settings?.companyNameEn || 'United Park Group (PARK)',
       alternateName: bootstrap.settings?.companyNameAr || 'مجموعة بارك المتحدة',
       url: origin,
+      logo: defaultLogoPath.startsWith('http') ? defaultLogoPath : `${origin}${defaultLogoPath}`,
       telephone: bootstrap.settings?.phone || '+966 12 6604411',
       email: bootstrap.settings?.email || 'info@park.com.sa',
       foundingDate: '1989',

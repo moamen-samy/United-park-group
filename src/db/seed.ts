@@ -100,7 +100,7 @@ async function runSeedIfEmpty(): Promise<void> {
       phone: '+966 12 6604411',
       whatsapp: '+966126604411',
       email: 'info@park.com.sa',
-      logoUrl: '',
+      logoUrl: '/assets/aistudio/image_ad8ad2f2-dc9e-407d-af3f-5c7149625b89_6b02dcf2.jpg',
       primaryColor: '#133D68',
       accentColor: '#D93829',
       mapEmbedUrl:
@@ -1555,6 +1555,20 @@ async function ensureHoldingGroupUpgraded(): Promise<void> {
 }
 
 async function ensureEnterpriseCmsUpgraded(): Promise<void> {
+  // 0. Backfill official PARK logo URL ONLY if currently empty/null (preserves custom admin uploads)
+  await db
+    .update(websiteSettings)
+    .set({
+      logoUrl: '/assets/aistudio/image_ad8ad2f2-dc9e-407d-af3f-5c7149625b89_6b02dcf2.jpg',
+      updatedAt: new Date(),
+    })
+    .where(
+      and(
+        eq(websiteSettings.siteKey, 'default'),
+        sql`(${websiteSettings.logoUrl} IS NULL OR trim(${websiteSettings.logoUrl}) = '')`
+      )
+    );
+
   // 1. Ensure full 6 enterprise RBAC roles exist (while preserving any existing custom/legacy roles)
   await db
     .insert(adminRoles)

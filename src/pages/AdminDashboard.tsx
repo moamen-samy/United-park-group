@@ -27,6 +27,7 @@ import {
   X,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { ParkLogo } from '../components/BrandMark';
 import { ADMIN_SIDEBAR_ITEMS, tAdmin } from '../components/admin/AdminTranslations';
 import { AdminLang, AdminOverviewPayload, AdminTab, AdminTheme } from '../components/admin/AdminTypes';
 import { MediaPickerModal } from '../components/admin/MediaPickerModal';
@@ -86,6 +87,7 @@ export const AdminDashboard: React.FC = () => {
     sendPasswordReset,
     signOut,
     navigate,
+    bootstrap,
     refreshBootstrap,
   } = useApp();
 
@@ -202,11 +204,14 @@ export const AdminDashboard: React.FC = () => {
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl max-w-md w-full p-8 space-y-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-lg bg-[#133D68] text-white flex items-center justify-center">
-                <Shield className="w-6 h-6" />
-              </div>
+              <ParkLogo
+                variant="dark"
+                compact
+                src={bootstrap?.settings?.logoUrl}
+                alt={tAdmin(adminLang, 'مجموعة بارك المتحدة', 'United Park Co.')}
+              />
               <div>
-                <h1 className="text-lg font-extrabold text-[#133D68] dark:text-white">
+                <h1 className="text-base sm:text-lg font-extrabold text-[#133D68] dark:text-white leading-tight">
                   {tAdmin(adminLang, 'بوابة إدارة مجموعة بارك المتحدة', 'United Park Group Enterprise CMS')}
                 </h1>
                 <p className="text-xs text-slate-500">
@@ -318,7 +323,15 @@ export const AdminDashboard: React.FC = () => {
         className="min-h-screen bg-slate-100 flex items-center justify-center p-6"
       >
         <div className="bg-white border border-slate-200 rounded-2xl max-w-lg w-full p-8 text-center space-y-4">
-          <Shield className="w-10 h-10 text-amber-500 mx-auto" />
+          <div className="flex justify-center">
+            <ParkLogo
+              variant="dark"
+              compact
+              src={bootstrap?.settings?.logoUrl}
+              alt={tAdmin(adminLang, 'مجموعة بارك المتحدة', 'United Park Co.')}
+            />
+          </div>
+          <Shield className="w-8 h-8 text-amber-500 mx-auto" />
           <h2 className="text-xl font-bold text-[#133D68]">
             {tAdmin(adminLang, 'الحساب بانتظار اعتماد الصلاحية', 'Role Assignment Required')}
           </h2>
@@ -390,14 +403,19 @@ export const AdminDashboard: React.FC = () => {
               : '-translate-x-full lg:translate-x-0'
         }`}
       >
-        <div className="px-5 py-4 border-b border-white/10 flex items-center justify-between">
-          <div>
-            <div className="text-base font-extrabold tracking-tight">UNITED PARK GROUP</div>
-            <div className="text-[11px] text-sky-200">
+        <div className="px-4 py-3.5 border-b border-white/10 flex items-center justify-between gap-2">
+          <div className="space-y-1.5 min-w-0">
+            <ParkLogo
+              variant="light"
+              compact
+              src={data?.settings?.logoUrl || bootstrap?.settings?.logoUrl}
+              alt={tAdmin(adminLang, 'مجموعة بارك المتحدة', 'United Park Co.')}
+            />
+            <div className="text-[11px] text-sky-200 truncate">
               {tAdmin(adminLang, 'منصة الإدارة المؤسسية (CMS)', 'Enterprise CMS Portal')}
             </div>
           </div>
-          <button type="button" onClick={() => setSidebarOpen(false)} className="lg:hidden p-1">
+          <button type="button" onClick={() => setSidebarOpen(false)} className="lg:hidden p-1 shrink-0">
             <X className="w-5 h-5" />
           </button>
         </div>
