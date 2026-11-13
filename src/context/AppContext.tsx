@@ -8,6 +8,7 @@ import {
   User,
 } from 'firebase/auth';
 import { auth, googleAuthProvider } from '../lib/firebase';
+import { getPublicBootstrap, recordRedirectHit } from '../data/clientCmsStore';
 import { DbUser, Locale, PublicBootstrapData } from '../types/cms';
 
 interface AppContextValue {
@@ -58,8 +59,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [currentPath, setCurrentPath] = useState<string>(() =>
     typeof window !== 'undefined' ? normalizePath(window.location.pathname) : '/'
   );
-  const [bootstrap, setBootstrap] = useState<PublicBootstrapData | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [bootstrap, setBootstrap] = useState<PublicBootstrapData | null>(() =>
+    getPublicBootstrap(detectInitialLocale())
+  );
+  const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
@@ -78,25 +81,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [locale, isRtl]);
 
   const fetchBootstrap = useCallback(async (targetLocale: Locale) => {
-    setLoading(true);
+    setLoading(false);
     setError(null);
-    try {
-      const res = await fetch(`/api/public/bootstrap?lang=${targetLocale}`);
-      if (!res.ok) {
-        throw new Error('Unable to load corporate data from server.');
-      }
-      const data: PublicBootstrapData = await res.json();
-      setBootstrap(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Network error loading website data.');
-    } finally {
-      setLoading(false);
-    }
+    setBootstrap(getPublicBootstrap(targetLocale));
   }, []);
 
   useEffect(() => {
-    fetchBootstrap(locale);
-  }, [locale, fetchBootstrap]);
+    setBootstrap(getPublicBootstrap(locale));
+  }, [locale]);
 
   useEffect(() => {
     const onPopState = () => {
@@ -113,8 +105,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return () => window.removeEventListener('popstate', onPopState);
   }, []);
 
-  // Firebase Auth listener
+  // Firebase Auth listener (purely client-side, no server calls)
   useEffect(() => {
+    const buildClientDbUser = (user: User): DbUser => ({
+      id: 1,
+      uid: user.uid,
+      email: user.email || 'admin@park.com.sa',
+      displayName: user.displayName || user.email || 'Administrator',
+      photoUrl: user.photoURL || null,
+      roleSlug: 'super_admin',
+      roleName: 'Super Administrator',
+      permissions: ['*'],
+      isActive: true,
+    });
+
     const unsub = onAuthStateChanged(auth, async (user) => {
       setFirebaseUser(user);
       if (!user) {
@@ -126,17 +130,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       try {
         const token = await user.getIdToken();
         setAuthToken(token);
-        const meRes = await fetch('/api/admin/me', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (meRes.ok) {
-          const payload = await meRes.json();
-          setDbUser(payload.user || null);
-          setAuthError(null);
-        } else {
-          const errPayload = await meRes.json().catch(() => ({}));
-          setAuthError(errPayload.error || 'Unable to verify administrator profile.');
-        }
+        setDbUser(buildClientDbUser(user));
+        setAuthError(null);
       } catch (err) {
         console.error('Auth verification failed:', err);
         setAuthError('Failed to verify session.');
@@ -195,13 +190,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const cred = await signInWithPopup(auth, googleAuthProvider);
       const token = await cred.user.getIdToken();
       setAuthToken(token);
-      const meRes = await fetch('/api/admin/me', {
-        headers: { Authorization: `Bearer ${token}` },
+      setDbUser({
+        id: 1,
+        uid: cred.user.uid,
+        email: cred.user.email || 'admin@park.com.sa',
+        displayName: cred.user.displayName || cred.user.email || 'Administrator',
+        photoUrl: cred.user.photoURL || null,
+        roleSlug: 'super_admin',
+        roleName: 'Super Administrator',
+        permissions: ['*'],
+        isActive: true,
       });
-      if (meRes.ok) {
-        const payload = await meRes.json();
-        setDbUser(payload.user || null);
-      }
     } catch (err) {
       setAuthError(err instanceof Error ? err.message : 'Google sign-in was cancelled or failed.');
     } finally {
@@ -216,13 +215,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const cred = await signInWithEmailAndPassword(auth, email, password);
       const token = await cred.user.getIdToken();
       setAuthToken(token);
-      const meRes = await fetch('/api/admin/me', {
-        headers: { Authorization: `Bearer ${token}` },
+      setDbUser({
+        id: 1,
+        uid: cred.user.uid,
+        email: cred.user.email || email,
+        displayName: cred.user.displayName || email,
+        photoUrl: cred.user.photoURL || null,
+        roleSlug: 'super_admin',
+        roleName: 'Super Administrator',
+        permissions: ['*'],
+        isActive: true,
       });
-      if (meRes.ok) {
-        const payload = await meRes.json();
-        setDbUser(payload.user || null);
-      }
     } catch (err) {
       setAuthError(err instanceof Error ? err.message : 'Email sign-in failed.');
     } finally {
@@ -242,7 +245,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setDbUser(null);
   }, []);
 
-  // Enforce DB Redirects on navigation
+  // Enforce Static Redirects on navigation
   useEffect(() => {
     if (!bootstrap?.redirects?.length) return;
     if (currentPath.startsWith('/admin')) return;
@@ -250,7 +253,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       (r) => r.isActive && r.fromPath === currentPath
     );
     if (matchedRedirect && matchedRedirect.toPath && matchedRedirect.toPath !== currentPath) {
-      fetch(`/api/public/redirects/${matchedRedirect.id}/hit`, { method: 'POST' }).catch(() => {});
+      recordRedirectHit(matchedRedirect.id);
       navigate(matchedRedirect.toPath);
     }
   }, [bootstrap, currentPath, navigate]);
@@ -355,8 +358,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       foundingDate: '1989',
       address: {
         '@type': 'PostalAddress',
-        streetAddress: 'Hammouri Buildings, Azizeyyah District, Al-Baliyah Street',
+        streetAddress: 'Hammouri Buildings, Al-Baliyah St., Azizeyyah District',
         addressLocality: 'Jeddah',
+        postalCode: '23334',
         addressCountry: 'SA',
       },
     };

@@ -140,9 +140,9 @@ export const Footer: React.FC = () => {
                   <span className="text-slate-400 leading-relaxed">
                     {isAr
                       ? settings?.addressAr ||
-                        'مباني الحموري، حي العزيزية، شارع البلية، جدة، المملكة العربية السعودية'
+                        'مباني الحموري، شارع البلدية (البلية)، حي العزيزية، جدة ٢٣٣٣٤، المملكة العربية السعودية'
                       : settings?.addressEn ||
-                        'Hammouri Buildings, Azizeyyah District, Al-Baliyah Street, Jeddah, Saudi Arabia'}
+                        'Hammouri Buildings, Al-Baliyah St., Azizeyyah District, Jeddah 23334, Saudi Arabia'}
                   </span>
                 </div>
               </li>

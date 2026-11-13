@@ -11,6 +11,11 @@ import {
   Upload,
 } from 'lucide-react';
 import { AdminModuleProps } from './AdminTypes';
+import {
+  exportClientLeadsCsv,
+  replaceClientMediaFile,
+  uploadClientMediaFiles,
+} from '../../data/clientCmsStore';
 import { tAdmin } from './AdminTranslations';
 
 export const MediaLibraryModule: React.FC<AdminModuleProps> = ({
@@ -50,21 +55,10 @@ export const MediaLibraryModule: React.FC<AdminModuleProps> = ({
   }, [data.mediaAssets, folder, search]);
 
   const handleMultiUpload = async (files: FileList | null) => {
-    if (!files || files.length === 0 || !authToken) return;
+    if (!files || files.length === 0) return;
     setUploading(true);
     try {
-      const formData = new FormData();
-      Array.from(files).forEach((f) => formData.append('files', f));
-      formData.append('folder', folder === 'all' ? 'general' : folder);
-      const res = await fetch('/api/admin/media', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${authToken}` },
-        body: formData,
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || 'Upload failed');
-      }
+      await uploadClientMediaFiles(files, folder === 'all' ? 'general' : folder);
       showToast('success', tAdmin(adminLang, 'تم رفع الملفات بنجاح', 'Files uploaded successfully'));
       await reloadData();
     } catch (err) {
@@ -75,15 +69,9 @@ export const MediaLibraryModule: React.FC<AdminModuleProps> = ({
   };
 
   const handleReplaceFile = async (id: number, files: FileList | null) => {
-    if (!files || files.length === 0 || !authToken) return;
-    const formData = new FormData();
-    formData.append('file', files[0]);
-    const res = await fetch(`/api/admin/media/${id}/replace`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${authToken}` },
-      body: formData,
-    });
-    if (res.ok) {
+    if (!files || files.length === 0) return;
+    const ok = await replaceClientMediaFile(id, files[0]);
+    if (ok) {
       showToast('success', tAdmin(adminLang, 'تم استبدال الملف مع الحفاظ على الرابط', 'File replaced cleanly'));
       await reloadData();
     } else {
@@ -328,15 +316,7 @@ export const LeadsModule: React.FC<AdminModuleProps> = ({
   const [statusFilter, setStatusFilter] = useState('all');
 
   const exportCsv = async (type: 'quotes' | 'contacts') => {
-    if (!authToken) return;
-    const res = await fetch(`/api/admin/leads/export?type=${type}`, {
-      headers: { Authorization: `Bearer ${authToken}` },
-    });
-    if (!res.ok) {
-      showToast('error', tAdmin(adminLang, 'فشل تصدير الملف', 'CSV export failed'));
-      return;
-    }
-    const blob = await res.blob();
+    const blob = exportClientLeadsCsv(type);
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;

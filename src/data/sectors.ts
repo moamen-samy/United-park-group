@@ -1,3 +1,10 @@
+import {
+  sectorContractingImg,
+  sectorRealEstateImg,
+  sectorHealthcareImg,
+  sectorSolarImg,
+} from './mediaAssets';
+
 export type SectorKey =
   | 'industrial-engineering'
   | 'contracting'
@@ -40,26 +47,26 @@ export const GROUP_SECTORS: SectorDefinition[] = [
     imageUrl: '/images/hero-pumps.jpg',
     en: {
       shortLabel: 'Industrial & Eng.',
-      title: 'Industrial & Engineering Solutions',
-      subtitle: 'Pumping stations, fluid networks, water treatment & mechanical skids',
+      title: 'Industrial Pumps & Engineering Solutions',
+      subtitle: 'Pumping stations, fluid networks, water treatment & fire-safety skids',
       summary:
-        'Authorized engineering supply, sizing, commissioning, and after-sales maintenance of industrial pumping, water treatment, and fire-safety systems.',
+        'Authorized engineering supply, hydraulic sizing, commissioning, and after-sales maintenance for pumps, disinfection, expansion vessels, and control panels since 1989.',
       highlights: [
         'Industrial & Commercial Pumping Systems',
-        'Water Treatment, Dosing & Booster Plants',
-        'Authorized OEM Global Partnerships Since 1989',
+        'Water Treatment, Dosing & Fire-Fighting Skids',
+        'Authorized OEM Partner Since 1989 · 24-Month Warranty',
       ],
     },
     ar: {
       shortLabel: 'الصناعة والهندسة',
-      title: 'الحلول الصناعية والهندسية',
-      subtitle: 'محطات الضخ، شبكات المياه، أنظمة المعالجة والمعدات الميكانيكية',
+      title: 'المضخات الصناعية والحلول الهندسية',
+      subtitle: 'محطات الضخ، شبكات المياه، أنظمة المعالجة ومكافحة الحريق',
       summary:
-        'توريد وتصميم وتشغيل وصيانة أنظمة الضخ الصناعية ومعالجة المياه وحلول السلامة بالتعاون مع كبرى الشركات المصنعة العالمية.',
+        'توريد ودراسة واختيار وتشغيل وصيانة أنظمة الضخ الصناعية ومعالجة المياه ومعدات الحريق ولوحات التحكم بالتعاون مع كبرى الشركات المصنعة العالمية.',
       highlights: [
-        'أنظمة الضخ الصناعية والتجارية',
-        'محطات معالجة المياه وتعزيز الضغط',
-        'شراكات عالمية معتمدة منذ عام ١٩٨٩',
+        'أنظمة الضخ الصناعية والتجارية ومحطات التعزيز',
+        'محطات معالجة المياه ومعدات مكافحة الحريق',
+        'شراكات عالمية معتمدة منذ ١٩٨٩ مع ضمان ٢٤ شهراً',
       ],
     },
   },
@@ -70,17 +77,17 @@ export const GROUP_SECTORS: SectorDefinition[] = [
     zoneCode: '02',
     accentHex: '#D93829',
     iconName: 'HardHat',
-    imageUrl: '/images/sector-utilities.jpg',
+    imageUrl: sectorContractingImg,
     en: {
       shortLabel: 'Contracting',
       title: 'Contracting & Construction',
       subtitle: 'Turnkey electromechanical, civil & municipal infrastructure execution',
       summary:
-        'Specialized civil and MEP contracting delivering structural developments, utility pipework networks, and turnkey facility installations across Saudi Arabia.',
+        'Specialized civil and MEP contracting delivering pumping stations, water distribution pipework, testing & commissioning, and facility installations across Saudi Arabia.',
       highlights: [
         'Electromechanical & Infrastructure Contracting',
         'Testing, Commissioning & Preventive Maintenance',
-        'Integrated Project Delivery Across KSA',
+        'Jeddah, Makkah, Madinah, Yanbu & Buraidah Reach',
       ],
     },
     ar: {
@@ -88,11 +95,11 @@ export const GROUP_SECTORS: SectorDefinition[] = [
       title: 'المقاولات والإنشاءات',
       subtitle: 'تنفيذ المشاريع الإنشائية والكهروميكانيكية والبنية التحتية',
       summary:
-        'مقاولات متخصصة للأعمال الإنشائية والكهروميكانيكية وشبكات البنية التحتية مع الفحص والتشغيل التجريبي وعقود الصيانة الوقائية.',
+        'مقاولات متخصصة للأعمال الإنشائية والكهروميكانيكية وشبكات المياه والصرف مع الفحص والتشغيل التجريبي وعقود الصيانة الوقائية.',
       highlights: [
         'المقاولات الكهروميكانيكية والبنية التحتية',
         'أعمال الفحص والتشغيل التجريبي والضمان',
-        'تنفيذ متكامل للمشاريع في أنحاء المملكة',
+        'تنفيذ متكامل في جدة ومكة والمدينة وينبع وبريدة',
       ],
     },
   },
@@ -103,13 +110,13 @@ export const GROUP_SECTORS: SectorDefinition[] = [
     zoneCode: '03',
     accentHex: '#3B82F6',
     iconName: 'Building2',
-    imageUrl: '/images/partners-banner.jpg',
+    imageUrl: sectorRealEstateImg,
     en: {
       shortLabel: 'Real Estate',
       title: 'Real Estate Development',
       subtitle: 'Modern residential compounds, commercial towers & urban assets',
       summary:
-        'Planning, development, and long-term asset stewardship of contemporary residential and commercial properties engineered for enduring urban value.',
+        'Planning, development, and long-term asset stewardship of contemporary residential and commercial properties engineered for enduring urban value in Jeddah and across KSA.',
       highlights: [
         'Commercial & Residential Developments',
         'Integrated MEP & Utility Readiness',
@@ -136,13 +143,13 @@ export const GROUP_SECTORS: SectorDefinition[] = [
     zoneCode: '04',
     accentHex: '#0EA5E9',
     iconName: 'Stethoscope',
-    imageUrl: '/images/facility-pump-room.jpg',
+    imageUrl: sectorHealthcareImg,
     en: {
       shortLabel: 'Healthcare',
       title: 'Medical Clinics & Healthcare',
       subtitle: 'Contemporary outpatient clinics & integrated healthcare environments',
       summary:
-        'Developing and supporting modern medical clinics and healthcare facilities designed around patient-centered architecture and clinical reliability.',
+        'Developing and supporting modern outpatient medical clinics and healthcare facilities built around patient-centered architecture and compliant clinical utilities.',
       highlights: [
         'Modern Outpatient Medical Clinics',
         'Patient-Centered Architectural Environments',
@@ -169,13 +176,13 @@ export const GROUP_SECTORS: SectorDefinition[] = [
     zoneCode: '05',
     accentHex: '#F59E0B',
     iconName: 'Sun',
-    imageUrl: '/images/sector-utilities.jpg',
+    imageUrl: sectorSolarImg,
     en: {
       shortLabel: 'Solar Energy',
       title: 'Solar Energy Systems',
       subtitle: 'Photovoltaic arrays, solar pumping & sustainable clean power',
       summary:
-        'Deploying high-efficiency photovoltaic installations, solar-powered pumping systems, and clean energy infrastructure supporting Saudi sustainability goals.',
+        'Deploying high-efficiency photovoltaic installations, solar-powered borehole pumping systems, and clean energy infrastructure built for Saudi irradiance.',
       highlights: [
         'Commercial & Industrial Photovoltaic Arrays',
         'Solar Water Pumping & Off-Grid Integration',
@@ -187,10 +194,10 @@ export const GROUP_SECTORS: SectorDefinition[] = [
       title: 'أنظمة الطاقة الشمسية',
       subtitle: 'محطات الطاقة الكهروضوئية والضخ الشمسي والطاقة المتجددة',
       summary:
-        'تصميم وتنفيذ أنظمة الطاقة الشمسية الكهروضوئية وحلول الضخ بالطاقة الشمسية لدعم التحول نحو الطاقة النظيفة والاستدامة في المملكة.',
+        'تصميم وتنفيذ أنظمة الطاقة الشمسية الكهروضوئية وحلول ضخ المياه بالطاقة الشمسية لدعم التحول نحو الطاقة النظيفة والاستدامة في المملكة.',
       highlights: [
         'أنظمة الألواح الشمسية للمنشآت التجارية والصناعية',
-        'حلول ضخ المياه بالطاقة الشمسية',
+        'حلول ضخ المياه بالطاقة الشمسية للآبار والمزارع',
         'بنية تحتية داعمة للطاقة المتجددة والاستدامة',
       ],
     },

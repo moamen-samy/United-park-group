@@ -12,6 +12,7 @@ import {
   Upload,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { submitStaticContactMessage, submitStaticQuoteRequest } from '../data/clientCmsStore';
 import { ResilientImage } from '../components/ResilientImage';
 import { GROUP_SECTORS, getSectorByKey, SectorKey } from '../data/sectors';
 import type { PageSectionItem } from '../types/cms';
@@ -590,6 +591,83 @@ export const ServicesPage: React.FC = () => {
           ))}
         </div>
 
+        {/* Verified park.com.sa Service Lifecycle & Competitive Guarantees */}
+        <section className="pt-4 space-y-6">
+          <div className="space-y-1.5">
+            <p className="text-xs font-semibold uppercase tracking-wider text-[#D93829]">
+              {isAr ? 'التزامنا الهندسي وخدمة ما بعد البيع' : 'ENGINEERING LIFECYCLE & GUARANTEES'}
+            </p>
+            <h2 className="text-2xl font-bold text-[#133D68]">
+              {isAr ? 'مزايا الخدمات والضمان من مجموعة بارك المتحدة' : 'Service Delivery Standards & Installation Warranty'}
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {[
+              {
+                code: '01',
+                titleEn: 'Free Initial Consultation',
+                titleAr: 'استشارة هندسية أولية مجانية',
+                descEn:
+                  'Comprehensive pre-selection assessment evaluating geographic location, water salinity (TDS), project scale, and exact application requirements.',
+                descAr:
+                  'دراسة هندسية أولية مجانية تقيّم الموقع الجغرافي للمشروع، درجة ملوحة المياه، حجم المشروع، ونوع التطبيق قبل توريد أي معدة.',
+              },
+              {
+                code: '02',
+                titleEn: 'Testing & Commissioning',
+                titleAr: 'الفحص والتشغيل التجريبي الميداني',
+                descEn:
+                  'On-site hydrostatic inspection, VFD/PLC sequence verification, current balancing, and formal handover testing by specialized engineers.',
+                descAr:
+                  'فحص ميداني متكامل للضغوط، ضبط لوحات التحكم ومغيرات السرعة، ومطابقة الأداء قبل التسليم النهائي.',
+              },
+              {
+                code: '03',
+                titleEn: 'Maintenance & Repair Desk',
+                titleAr: 'الصيانة الوقائية والإصلاح المتخصص',
+                descEn:
+                  'Dedicated preventive maintenance contracts and rapid troubleshooting performed by factory-trained technical specialists.',
+                descAr:
+                  'عقود صيانة وقائية وخدمات إصلاح سريعة ينفذها فنيون متخصصون مدربون وفق معايير المصنعين العالميين.',
+              },
+              {
+                code: '04',
+                titleEn: 'Fast Delivery & Genuine Spare Parts',
+                titleAr: 'سرعة التوريد وتوفر قطع الغيار الأصلية',
+                descEn:
+                  'Prompt project dispatch across Jeddah, Makkah, Madinah, Yanbu, Buraidah & Qunfudah backed by stock seals, impellers & controls.',
+                descAr:
+                  'توريد سريع في جدة ومكة والمدينة وينبع وبريدة والقنفذة مع توفر دائم لقطع الغيار وموانع التسرب الأصلية.',
+              },
+              {
+                code: '05',
+                titleEn: '24-Month (2-Year) Installation Warranty',
+                titleAr: 'ضمان لمدة عامين (٢٤ شهراً) على التركيب',
+                descEn:
+                  'Every contracted turnkey installation carries a full 2-year warranty covering mechanical workmanship and system integrity.',
+                descAr:
+                  'جميع أعمال التركيب والتشغيل الكهروميكانيكية المنفذة عبر فرقنا تغطيها ضمانة فعلية لمدة ٢٤ شهراً.',
+              },
+            ].map((item) => (
+              <div
+                key={item.code}
+                className="p-6 rounded-xl border border-slate-200 bg-[#F8FAFC] space-y-2.5"
+              >
+                <span className="text-xs font-mono-tabular font-semibold text-slate-400">
+                  {item.code}
+                </span>
+                <h3 className="text-base font-bold text-slate-900">
+                  {isAr ? item.titleAr : item.titleEn}
+                </h3>
+                <p className="text-sm text-slate-600 leading-relaxed">
+                  {isAr ? item.descAr : item.descEn}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+
         <div className="bg-[#F4F6F9] border border-slate-200 rounded-xl p-8 flex flex-col sm:flex-row items-center justify-between gap-6">
           <div className="space-y-1">
             <h3 className="text-lg font-bold text-[#133D68]">
@@ -597,8 +675,8 @@ export const ServicesPage: React.FC = () => {
             </h3>
             <p className="text-sm text-slate-600">
               {isAr
-                ? 'فريقنا الهندسي في جدة جاهز لمراجعة متطلبات الضخ والمعالجة.'
-                : 'Our Jeddah engineering team is ready to review your flow, head, and system requirements.'}
+                ? 'فريقنا الهندسي في جدة جاهز لمراجعة الموقع وملوحة المياه ومتطلبات الضخ والمعالجة.'
+                : 'Our Jeddah engineering team is ready to review your location, water salinity, flow, and head requirements.'}
             </p>
           </div>
           <button
@@ -1233,13 +1311,7 @@ export const ContactPage: React.FC = () => {
     setSubmitting(true);
     setStatusMessage(null);
     try {
-      const res = await fetch('/api/public/contact', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, locale }),
-      });
-      const payload = await res.json();
-      if (!res.ok) throw new Error(payload.error || 'Submission failed');
+      submitStaticContactMessage(form);
       setStatusMessage({
         type: 'success',
         text: isAr
@@ -1524,27 +1596,18 @@ export const QuotePage: React.FC = () => {
     setFeedback(null);
 
     try {
-      const formData = new FormData();
-      formData.append('fullName', fullName);
-      formData.append('companyName', companyName);
-      formData.append('businessEmail', businessEmail);
-      formData.append('phone', `${countryCode} ${phoneNumber}`.trim());
-      formData.append('productOrService', productOrService);
-      formData.append('estimatedQuantity', estimatedQuantity);
-      formData.append('projectDescription', projectDescription);
-      formData.append('preferredContactMethod', preferredContactMethod);
-      formData.append('locale', locale);
-      formData.append('websiteTrap', websiteTrap);
-      if (file) {
-        formData.append('attachment', file);
-      }
-
-      const res = await fetch('/api/public/quotes', {
-        method: 'POST',
-        body: formData,
+      const payload = submitStaticQuoteRequest({
+        fullName,
+        companyName,
+        businessEmail,
+        phone: `${countryCode} ${phoneNumber}`.trim(),
+        productOrService,
+        estimatedQuantity,
+        projectDescription,
+        preferredContactMethod,
+        attachmentName: file?.name || '',
+        websiteTrap,
       });
-      const payload = await res.json();
-      if (!res.ok) throw new Error(payload.error || 'Quotation submission failed');
 
       setFeedback({
         type: 'success',

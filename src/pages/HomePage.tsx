@@ -439,8 +439,12 @@ export const HomePage: React.FC = () => {
 
       case 'featured_products': {
         const meta = findHpSection('featured_products');
-        const limit = Number(meta?.configJson?.limit) || 3;
-        const featuredProducts = allProducts.slice(0, Math.min(Math.max(limit, 3), 6));
+        const limit = Number(meta?.configJson?.limit) || 6;
+        const prioritized = [
+          ...allProducts.filter((p) => p.isFeatured),
+          ...allProducts.filter((p) => !p.isFeatured),
+        ];
+        const featuredProducts = prioritized.slice(0, Math.min(Math.max(limit, 3), 6));
         if (featuredProducts.length === 0) return null;
 
         return (
@@ -619,31 +623,31 @@ export const HomePage: React.FC = () => {
                     {[
                       {
                         icon: Shield,
-                        en: 'Diversified Holding Strength',
-                        ar: 'قوة مجموعة متعددة القطاعات',
-                        subEn: 'Five complementary industries operating under unified governance since 1989.',
-                        subAr: 'خمسة قطاعات متكاملة تعمل تحت حوكمة مؤسسية موحدة منذ عام ١٩٨٩.',
+                        en: '24-Month Installation Warranty',
+                        ar: 'ضمان تركيب لمدة ٢٤ شهراً',
+                        subEn: 'Backed by five integrated group sectors and rapid regional field dispatch since 1989.',
+                        subAr: 'ضمان ٢٤ شهراً على التركيبات مدعوماً بخمسة قطاعات متكاملة منذ عام ١٩٨٩.',
                       },
                       {
                         icon: Wrench,
-                        en: 'Free Initial Technical Consultation',
-                        ar: 'استشارة هندسية وفنية مجانية',
-                        subEn: 'Accurate project scoping, system sizing, and cross-sector coordination.',
-                        subAr: 'دراسة دقيقة للمشاريع وتنسيق هندسي متكامل عبر القطاعات.',
+                        en: 'Free Initial Engineering Consultation',
+                        ar: 'استشارة هندسية أولية مجانية',
+                        subEn: 'We assess site geography, water salinity, project scale & exact duty before sizing.',
+                        subAr: 'ندرس موقع المشروع، ملوحة المياه، حجم المشروع، ونوع التطبيق قبل اختيار المعدات.',
                       },
                       {
                         icon: CheckCircle2,
-                        en: 'Authorized Global OEM Partnerships',
+                        en: 'Authorized OEM Global Partnerships',
                         ar: 'شراكات ومعدات أصلية معتمدة',
                         subEn: 'Direct sourcing from Grundfos, Reflex, GWS, Bristol Fire & Ameriflo.',
                         subAr: 'توريد مباشر من جراندفوس وريفلكس وجلوبال ووتر وبريستول وأميريفلو.',
                       },
                       {
                         icon: CheckCircle2,
-                        en: 'Kingdom-Wide Delivery & 24-Month Support',
-                        ar: 'تغطية شاملة وضمان ٢٤ شهراً',
-                        subEn: 'Serving Jeddah, Makkah, Madinah, Yanbu, Buraidah & Qunfudah.',
-                        subAr: 'خدمة مشاريع جدة ومكة والمدينة وينبع وبريدة والقنفذة.',
+                        en: 'Fast Delivery, Spare Parts & Kingdom Reach',
+                        ar: 'توريد سريع وقطع غيار وتغطية شاملة',
+                        subEn: 'Testing, commissioning & repair across Jeddah, Makkah, Madinah, Yanbu, Buraidah & Qunfudah.',
+                        subAr: 'فحص وتشغيل وصيانة وتوافر قطع الغيار في جدة ومكة والمدينة وينبع وبريدة والقنفذة.',
                       },
                     ].map((item) => {
                       const IconComp = item.icon;

@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { ChevronDown, Globe, Menu, Plus, Minus, X, ArrowRight, ArrowLeft } from 'lucide-react';
+import { ChevronDown, Menu, Plus, Minus, X, ArrowRight, ArrowLeft } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { ParkLogo } from './BrandMark';
+import { LocaleToggle } from './LocaleToggle';
 import { GROUP_SECTORS } from '../data/sectors';
 
 export const Header: React.FC = () => {
-  const { locale, isRtl, toggleLocale, currentPath, navigate, bootstrap } = useApp();
+  const { locale, isRtl, currentPath, navigate, bootstrap } = useApp();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [divisionsOpen, setDivisionsOpen] = useState(false);
   const [sectorsExpanded, setSectorsExpanded] = useState(false);
@@ -183,21 +184,9 @@ export const Header: React.FC = () => {
           </button>
         </nav>
 
-        {/* Zone 3: Language Switcher + Primary Action CTA */}
+        {/* Zone 3: Locale Toggle (EN LTR / AR RTL) + Primary Action CTA */}
         <div className="flex items-center gap-3 shrink-0">
-          <button
-            type="button"
-            onClick={toggleLocale}
-            className={`inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-md transition-colors whitespace-nowrap shrink-0 min-h-[40px] ${
-              isHeroDark
-                ? 'text-white border border-white/25 hover:bg-white/10'
-                : 'text-slate-700 border border-slate-300 hover:border-[#133D68] hover:text-[#133D68]'
-            }`}
-            aria-label={isAr ? 'Switch to English' : 'التبديل إلى العربية'}
-          >
-            <Globe className="w-3.5 h-3.5" aria-hidden="true" />
-            <span>{isAr ? 'English' : 'العربية'}</span>
-          </button>
+          <LocaleToggle isHeroDark={isHeroDark} />
 
           <button
             type="button"
@@ -378,6 +367,13 @@ export const Header: React.FC = () => {
             </nav>
 
             <div className="p-5 border-t border-slate-200 space-y-4 bg-slate-50">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-xs font-semibold text-slate-600">
+                  {isAr ? 'اللغة واتجاه العرض' : 'Language & Direction'}
+                </span>
+                <LocaleToggle />
+              </div>
+
               <button
                 type="button"
                 onClick={() => handleNav('/quote')}

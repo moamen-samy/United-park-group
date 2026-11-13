@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { ParkLogo } from '../components/BrandMark';
+import { getClientAdminOverview, handleClientAdminRequest } from '../data/clientCmsStore';
 import { ADMIN_SIDEBAR_ITEMS, tAdmin } from '../components/admin/AdminTranslations';
 import { AdminLang, AdminOverviewPayload, AdminTab, AdminTheme } from '../components/admin/AdminTypes';
 import { MediaPickerModal } from '../components/admin/MediaPickerModal';
@@ -115,24 +116,16 @@ export const AdminDashboard: React.FC = () => {
   }, []);
 
   const fetchOverview = useCallback(async () => {
-    if (!authToken) return;
     setLoading(true);
     try {
-      const res = await fetch('/api/admin/overview', {
-        headers: { Authorization: `Bearer ${authToken}` },
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || 'Unable to load CMS overview');
-      }
-      const json: AdminOverviewPayload = await res.json();
+      const json = getClientAdminOverview();
       setData(json);
     } catch (err) {
       showToast('error', err instanceof Error ? err.message : 'Failed to load CMS data.');
     } finally {
       setLoading(false);
     }
-  }, [authToken, showToast]);
+  }, [showToast]);
 
   useEffect(() => {
     if (authToken && dbUser && dbUser.roleSlug !== 'viewer') {
@@ -140,21 +133,9 @@ export const AdminDashboard: React.FC = () => {
     }
   }, [authToken, dbUser, fetchOverview]);
 
-  const apiRequest = useCallback(
-    async (url: string, options: RequestInit = {}) => {
-      if (!authToken) throw new Error('Not authenticated');
-      const res = await fetch(url, {
-        ...options,
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${authToken}`,
-          ...(options.headers || {}),
-        },
-      });
-      return res;
-    },
-    [authToken]
-  );
+  const apiRequest = useCallback(async (url: string, options: RequestInit = {}) => {
+    return handleClientAdminRequest(url, options);
+  }, []);
 
   const handleTabSwitch = (nextTab: AdminTab) => {
     if (hasUnsavedChanges) {
@@ -483,8 +464,8 @@ export const AdminDashboard: React.FC = () => {
               <p className="text-[11px] text-slate-500 hidden sm:block">
                 {tAdmin(
                   adminLang,
-                  'كافة التغييرات تحفظ مباشرة في Cloud SQL PostgreSQL وتنعكس على الموقع العام.',
-                  'All edits persist directly to Cloud SQL PostgreSQL and update the public site live.'
+                  'كافة التغييرات تحفظ محلياً في المتصفح وتنعكس فوراً على الموقع العام.',
+                  'All edits save locally in the browser and update the public site immediately.'
                 )}
               </p>
             </div>

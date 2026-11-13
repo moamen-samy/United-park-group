@@ -1,20 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import { Image as ImageIcon, Search, Upload, X } from 'lucide-react';
 import { AdminLang, AdminOverviewPayload } from './AdminTypes';
+import { uploadClientMediaFiles } from '../../data/clientCmsStore';
+import { STATIC_CORPORATE_ASSETS } from '../../data/mediaAssets';
 import { tAdmin } from './AdminTranslations';
-
-const STATIC_CORPORATE_ASSETS = [
-  {
-    url: '/assets/aistudio/image_ad8ad2f2-dc9e-407d-af3f-5c7149625b89_6b02dcf2.jpg',
-    name: 'Official United Park Co. (PARK) Logo',
-    folder: 'general',
-  },
-  { url: '/images/hero-pumps.jpg', name: 'Corporate Hero Pumping Facility', folder: 'banners' },
-  { url: '/images/facility-pump-room.jpg', name: 'Industrial Pump Room', folder: 'projects' },
-  { url: '/images/sector-utilities.jpg', name: 'Utilities & Solar Energy Infrastructure', folder: 'sectors' },
-  { url: '/images/partners-banner.jpg', name: 'Corporate Architectural Facility', folder: 'sectors' },
-  { url: '/images/product-pump.jpg', name: 'Industrial Vertical Multistage Pump', folder: 'products' },
-];
 
 interface MediaPickerModalProps {
   open: boolean;
@@ -57,22 +46,11 @@ export const MediaPickerModal: React.FC<MediaPickerModalProps> = ({
   if (!open) return null;
 
   const handleUpload = async (files: FileList | null) => {
-    if (!files || files.length === 0 || !authToken) return;
+    if (!files || files.length === 0) return;
     setUploading(true);
     try {
-      const formData = new FormData();
-      Array.from(files).forEach((f) => formData.append('files', f));
-      formData.append('folder', folderFilter === 'all' ? 'general' : folderFilter);
-      const res = await fetch('/api/admin/media', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${authToken}` },
-        body: formData,
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || 'Upload failed');
-      }
-      const created = await res.json();
+      const targetFolder = folderFilter === 'all' ? 'general' : folderFilter;
+      const created = await uploadClientMediaFiles(files, targetFolder);
       await reloadData();
       showToast('success', tAdmin(adminLang, 'تم رفع الملف بنجاح', 'File uploaded successfully'));
       if (created?.url) {
