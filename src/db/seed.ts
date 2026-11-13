@@ -2,8 +2,11 @@ import { and, eq, sql } from 'drizzle-orm';
 import { db } from './index.ts';
 import {
   adminRoles,
+  banners,
   blogPosts,
   clients,
+  homepageSections,
+  mediaFolders,
   navigationItems,
   navigationMenus,
   pages,
@@ -15,6 +18,8 @@ import {
   productTranslations,
   projects,
   projectTranslations,
+  sectors,
+  sectorTranslations,
   seoMetadata,
   services,
   serviceTranslations,
@@ -30,6 +35,7 @@ export async function ensureSeeded(): Promise<void> {
     seedPromise = (async () => {
       await runSeedIfEmpty();
       await ensureHoldingGroupUpgraded();
+      await ensureEnterpriseCmsUpgraded();
     })().catch((err) => {
       seedPromise = null;
       throw err;
@@ -1547,4 +1553,412 @@ async function ensureHoldingGroupUpgraded(): Promise<void> {
     ])
     .onConflictDoNothing();
 }
+
+async function ensureEnterpriseCmsUpgraded(): Promise<void> {
+  // 1. Ensure full 6 enterprise RBAC roles exist (while preserving any existing custom/legacy roles)
+  await db
+    .insert(adminRoles)
+    .values([
+      {
+        slug: 'super_admin',
+        name: 'Super Administrator',
+        description: 'Full access across CMS, catalog, pricing, users, backups, and security logs.',
+        permissions: ['*'],
+      },
+      {
+        slug: 'admin',
+        name: 'Administrator',
+        description: 'Full operational management of website content, catalog, sectors, leads, and SEO.',
+        permissions: [
+          'content:read',
+          'content:write',
+          'catalog:read',
+          'catalog:write',
+          'pricing:write',
+          'media:write',
+          'seo:write',
+          'leads:read',
+          'leads:write',
+          'logs:read',
+          'settings:manage',
+        ],
+      },
+      {
+        slug: 'content_editor',
+        name: 'Content Editor',
+        description: 'Manage pages, sections, sectors, news articles, banners, media, and navigation.',
+        permissions: ['content:read', 'content:write', 'media:write'],
+      },
+      {
+        slug: 'product_manager',
+        name: 'Product & Pricing Manager',
+        description: 'Manage products, categories, technical specs, pricing in SAR/multi-currency, and partners.',
+        permissions: ['catalog:read', 'catalog:write', 'pricing:write', 'media:write'],
+      },
+      {
+        slug: 'marketing_manager',
+        name: 'Marketing & SEO Manager',
+        description: 'Manage SEO metadata, sitemaps, redirects, banners, news articles, and customer leads.',
+        permissions: ['content:read', 'seo:write', 'leads:read', 'leads:write', 'media:write'],
+      },
+      {
+        slug: 'viewer',
+        name: 'Viewer',
+        description: 'Read-only access awaiting administrator role assignment.',
+        permissions: ['profile:read', 'content:read', 'catalog:read', 'leads:read'],
+      },
+    ])
+    .onConflictDoNothing();
+
+  // 2. Seed all 5 Holding Group Business Sectors if empty
+  const existingSectors = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(sectors);
+
+  if ((existingSectors[0]?.count ?? 0) === 0) {
+    const sectorSeeds = [
+      {
+        slug: 'industrial-engineering',
+        routePath: '/divisions/industrial-engineering',
+        iconName: 'Cog',
+        imageUrl: '/images/hero-pumps.jpg',
+        accentColor: '#133D68',
+        sortOrder: 1,
+        en: {
+          title: 'Industrial Pumps & Engineering Solutions',
+          shortTitle: 'Industrial Pumps & Engineering',
+          tagline: 'Authorized Fluid Engineering Since 1989',
+          summary:
+            'Authorized Saudi partner for Grundfos, Reflex, GWS, Bristol Fire, and Ameriflo — engineered pumping stations, VFD boosters, and water infrastructure.',
+          description:
+            'United Park Group delivers industrial fluid handling, multi-stage pressure boosting, wastewater lifting stations, fire-fighting pump skids, and precision measurement panels across Saudi Arabia.',
+          highlightsJson: [
+            'Authorized Grundfos & Reflex Partner',
+            'Turnkey Pump Sizing & Commissioning',
+            '24/7 Maintenance & Spare Parts',
+          ],
+        },
+        ar: {
+          title: 'المضخات الصناعية والحلول الهندسية',
+          shortTitle: 'المضخات والحلول الهندسية',
+          tagline: 'شراكات هندسية معتمدة منذ عام ١٩٨٩',
+          summary:
+            'وكيل وشريك معتمد لأبرز المصنعين العالميين لتوريد وتشغيل المضخات الصناعية ومحطات الرفع وأنظمة معالجة المياه ومكافحة الحريق.',
+          description:
+            'توفر المجموعة حزم مضخات متكاملة، وحدات رفع الضغط متعددة المراحل، محطات معالجة الصرف الصحي، ولوحات التحكم الذكية للمنشآت الصناعية والتجارية.',
+          highlightsJson: [
+            'وكيل معتمد لكبرى العلامات العالمية',
+            'دراسة واختيار وتشغيل هندسي متكامل',
+            'صيانة مستمرة وتوافر سريع لقطع الغيار',
+          ],
+        },
+      },
+      {
+        slug: 'contracting',
+        routePath: '/divisions/contracting',
+        iconName: 'HardHat',
+        imageUrl: '/images/sector-utilities.jpg',
+        accentColor: '#0C2B4B',
+        sortOrder: 2,
+        en: {
+          title: 'Contracting & Construction',
+          shortTitle: 'Contracting & Construction',
+          tagline: 'Specialized Electromechanical & MEP Execution',
+          summary:
+            'End-to-end electromechanical contracting, municipal water networks, plant room fabrication, and infrastructure delivery backed by 24-month warranties.',
+          description:
+            'Park Contracting executes specialized MEP scopes, pumping station civil/mechanical builds, piping fabrication, testing, and long-term facility operations across the Kingdom.',
+          highlightsJson: [
+            'Turnkey MEP & Pumping Stations',
+            'Water & Drainage Infrastructure',
+            '24-Month Installation Warranty',
+          ],
+        },
+        ar: {
+          title: 'المقاولات والإنشاءات',
+          shortTitle: 'المقاولات والإنشاءات',
+          tagline: 'تنفيذ متخصص للأعمال الكهروميكانيكية والبنية التحتية',
+          summary:
+            'تنفيذ متكامل لأعمال المقاولات الكهروميكانيكية، وشبكات المياه والصرف، وغرف المضخات وفق أعلى معايير الجودة مع ضمان ٢٤ شهراً.',
+          description:
+            'يتولى قطاع المقاولات تنفيذ مشاريع محطات الضخ وشبكات الأنابيب والفحص والتشغيل التجريبي وعقود الصيانة التشغيلية في مختلف مناطق المملكة.',
+          highlightsJson: [
+            'مشاريع كهروميكانيكية متكاملة',
+            'شبكات المياه والبنية التحتية',
+            'ضمان تركيب وتشغيل لمدة ٢٤ شهراً',
+          ],
+        },
+      },
+      {
+        slug: 'real-estate',
+        routePath: '/divisions/real-estate',
+        iconName: 'Building2',
+        imageUrl: '/images/partners-banner.jpg',
+        accentColor: '#1E4E79',
+        sortOrder: 3,
+        en: {
+          title: 'Real Estate Development',
+          shortTitle: 'Real Estate Development',
+          tagline: 'Commercial & Urban Asset Stewardship',
+          summary:
+            'Strategic commercial and residential property development integrating modern architectural standards with resilient engineering infrastructure.',
+          description:
+            'Park Real Estate develops and manages commercial complexes and urban real estate assets aligned with Saudi urban transformation and long-term tenant value.',
+          highlightsJson: [
+            'Commercial & Mixed-Use Assets',
+            'Engineering-Ready Infrastructure',
+            'Sustainable Facility Management',
+          ],
+        },
+        ar: {
+          title: 'التطوير العقاري',
+          shortTitle: 'التطوير العقاري',
+          tagline: 'تطوير وإدارة الأصول العقارية الحديثة',
+          summary:
+            'تطوير وإدارة المشاريع العقارية التجارية والسكنية بمعايير عمرانية حديثة وبنية تحتية هندسية متكاملة.',
+          description:
+            'يعمل قطاع التطوير العقاري على إنشاء وإدارة المرافق التجارية والأصول العقارية بما يواكب التحول الحضري ورؤية التنمية في المملكة.',
+          highlightsJson: [
+            'مجمعات تجارية ومتعددة الاستخدامات',
+            'بنية تحتية هندسية مستدامة',
+            'إدارة احترافية للأصول والمرافق',
+          ],
+        },
+      },
+      {
+        slug: 'healthcare',
+        routePath: '/divisions/healthcare',
+        iconName: 'HeartPulse',
+        imageUrl: '/images/facility-pump-room.jpg',
+        accentColor: '#D93829',
+        sortOrder: 4,
+        en: {
+          title: 'Medical Clinics & Healthcare',
+          shortTitle: 'Medical Clinics & Healthcare',
+          tagline: 'Patient-Centered Clinical Environments',
+          summary:
+            'Developing modern outpatient medical clinics and healthcare facilities centered on clinical reliability, hygiene infrastructure, and patient comfort.',
+          description:
+            'United Park Group invests in specialized outpatient medical clinics and clinical facilities backed by compliant HVAC, medical-grade water systems, and contemporary design.',
+          highlightsJson: [
+            'Modern Outpatient Medical Clinics',
+            'Compliant Clinical Infrastructure',
+            'Patient-First Care Standards',
+          ],
+        },
+        ar: {
+          title: 'العيادات الطبية والرعاية الصحية',
+          shortTitle: 'العيادات والرعاية الصحية',
+          tagline: 'بيئات علاجية متقدمة تركز على المريض',
+          summary:
+            'تطوير وتشغيل العيادات الطبية ومرافق الرعاية الصحية الحديثة وفق أعلى معايير السلامة الإكلينيكية والتصميم الطبي المتطور.',
+          description:
+            'تستثمر المجموعة في العيادات الطبية المتخصصة ومراكز الرعاية الأولية المدعومة ببنية تحتية طبية وهندسية متوافقة مع المعايير الصحية.',
+          highlightsJson: [
+            'عيادات ومراكز رعاية طبية حديثة',
+            'بنية تحتية متوافقة مع المعايير الصحية',
+            'تجربة رعاية متمحورة حول المريض',
+          ],
+        },
+      },
+      {
+        slug: 'solar-energy',
+        routePath: '/divisions/solar-energy',
+        iconName: 'Sun',
+        imageUrl: '/images/sector-utilities.jpg',
+        accentColor: '#D97706',
+        sortOrder: 5,
+        en: {
+          title: 'Solar Energy Systems',
+          shortTitle: 'Solar Energy Systems',
+          tagline: 'Clean Photovoltaic & Solar Pumping Power',
+          summary:
+            'High-efficiency commercial rooftop photovoltaic arrays, off-grid solar water pumping, and clean energy engineering built for Saudi irradiance.',
+          description:
+            'Our Solar Energy division designs and installs grid-tied commercial PV systems, inverter & battery storage packages, and solar borehole pumping solutions.',
+          highlightsJson: [
+            'Commercial Rooftop PV Systems',
+            'Solar Water Pumping Packages',
+            'Inverter & Energy Storage Integration',
+          ],
+        },
+        ar: {
+          title: 'أنظمة الطاقة الشمسية',
+          shortTitle: 'الطاقة الشمسية',
+          tagline: 'حلول الطاقة الكهروضوئية والضخ الشمسي',
+          summary:
+            'تصميم وتركيب محطات الطاقة الشمسية الكهروضوئية للمنشآت التجارية وأنظمة ضخ المياه بالطاقة الشمسية عالية الكفاءة.',
+          description:
+            'يقدم قطاع الطاقة الشمسية أنظمة ألواح كهروضوئية متصلة بالشبكة، وحلول تخزين الطاقة، وأنظمة ضخ الآبار والمزارع بالطاقة الشمسية.',
+          highlightsJson: [
+            'محطات طاقة شمسية للمباني والمصانع',
+            'أنظمة ضخ المياه بالطاقة الشمسية',
+            'تكامل المحولات وتخزين الطاقة',
+          ],
+        },
+      },
+    ];
+
+    for (const sec of sectorSeeds) {
+      const [inserted] = await db
+        .insert(sectors)
+        .values({
+          slug: sec.slug,
+          routePath: sec.routePath,
+          iconName: sec.iconName,
+          imageUrl: sec.imageUrl,
+          accentColor: sec.accentColor,
+          sortOrder: sec.sortOrder,
+          isFeatured: true,
+          isPublished: true,
+        })
+        .returning();
+
+      await db.insert(sectorTranslations).values([
+        { sectorId: inserted.id, locale: 'en', ...sec.en },
+        { sectorId: inserted.id, locale: 'ar', ...sec.ar },
+      ]);
+    }
+  }
+
+  // 3. Seed default Media Folders
+  await db
+    .insert(mediaFolders)
+    .values([
+      { slug: 'general', name: 'General Assets', description: 'Corporate logos and shared media' },
+      { slug: 'products', name: 'Products & Catalog', description: 'Equipment photos and datasheets' },
+      { slug: 'sectors', name: 'Business Sectors', description: 'Division and sector visual banners' },
+      { slug: 'projects', name: 'Projects Portfolio', description: 'Project site photography' },
+      { slug: 'news', name: 'News & Blog', description: 'Editorial covers and announcements' },
+      { slug: 'banners', name: 'Homepage Banners', description: 'Hero and promotional banners' },
+    ])
+    .onConflictDoNothing();
+
+  // 4. Seed initial Homepage Banners if empty
+  const existingBanners = await db.select({ count: sql<number>`count(*)::int` }).from(banners);
+  if ((existingBanners[0]?.count ?? 0) === 0) {
+    await db.insert(banners).values([
+      {
+        placement: 'hero',
+        titleEn: 'MORE THAN A GROUP.\nA VISION THAT CONNECTS INDUSTRIES.',
+        titleAr: 'أكثر من مجرد مجموعة...\nرؤية تجمع قطاعات متعددة.',
+        subtitleEn:
+          'United Park Group integrates Industrial Pumps, Contracting, Real Estate, Healthcare, and Solar Energy across Saudi Arabia.',
+        subtitleAr:
+          'تجمع مجموعة بارك المتحدة قطاعات المضخات الصناعية والمقاولات والتطوير العقاري والرعاية الصحية والطاقة الشمسية في المملكة.',
+        ctaTextEn: 'EXPLORE OUR GROUP',
+        ctaTextAr: 'استكشف قطاعات المجموعة',
+        ctaUrl: '/divisions/industrial-engineering',
+        imageUrl: '/images/hero-pumps.jpg',
+        mobileImageUrl: '/images/hero-pumps.jpg',
+        sortOrder: 1,
+        isPublished: true,
+      },
+      {
+        placement: 'promo',
+        titleEn: 'Single-Source Engineering & 24-Month Installation Support',
+        titleAr: 'حلول هندسية من مصدر واحد وضمان تركيب لمدة ٢٤ شهراً',
+        subtitleEn:
+          'From hydraulic sizing and OEM equipment supply to commissioning and preventive maintenance across Jeddah and the Kingdom.',
+        subtitleAr:
+          'من الدراسة الهندسية وتوريد المعدات المعتمدة إلى التشغيل والصيانة الوقائية في جدة وكافة مناطق المملكة.',
+        ctaTextEn: 'Request a Quote',
+        ctaTextAr: 'اطلب عرض سعر',
+        ctaUrl: '/quote',
+        imageUrl: '/images/facility-pump-room.jpg',
+        mobileImageUrl: '/images/facility-pump-room.jpg',
+        sortOrder: 2,
+        isPublished: true,
+      },
+    ]);
+  }
+
+  // 5. Seed Homepage Sections Ordering & Visibility if empty
+  const existingHomepageSections = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(homepageSections);
+
+  if ((existingHomepageSections[0]?.count ?? 0) === 0) {
+    await db.insert(homepageSections).values([
+      {
+        sectionKey: 'hero',
+        sectionType: 'hero',
+        titleEn: '3D Campus Hero & Sector Dock',
+        titleAr: 'الواجهة الرئيسية ثلاثية الأبعاد والقطاعات',
+        subtitleEn: 'Full-bleed 3D headquarters showcase with five interactive business sectors',
+        subtitleAr: 'عرض ثلاثي الأبعاد للمقر الرئيسي مع خمسة قطاعات أعمال تفاعلية',
+        sortOrder: 1,
+        isVisible: true,
+        configJson: { show3dCampus: true },
+      },
+      {
+        sectionKey: 'overview_statement',
+        sectionType: 'cta',
+        titleEn: 'Corporate Vision & Group Strength',
+        titleAr: 'رؤية المجموعة وقوتها التكاملية',
+        subtitleEn: 'Founded in Jeddah in 1989 — diversified industrial and community leadership',
+        subtitleAr: 'تأسست في جدة عام ١٩٨٩ — ريادة صناعية وتنموية متعددة القطاعات',
+        sortOrder: 2,
+        isVisible: true,
+        configJson: {},
+      },
+      {
+        sectionKey: 'sectors_grid',
+        sectionType: 'features',
+        titleEn: 'Our Five Business Sectors',
+        titleAr: 'قطاعات أعمالنا الخمسة',
+        subtitleEn: 'Integrated divisions delivering industrial, contracting, real estate, medical, and solar value',
+        subtitleAr: 'قطاعات متكاملة تقدم حلولاً في الصناعة والمقاولات والعقار والرعاية الصحية والطاقة الشمسية',
+        sortOrder: 3,
+        isVisible: true,
+        configJson: {},
+      },
+      {
+        sectionKey: 'featured_products',
+        sectionType: 'product_showcase',
+        titleEn: 'Industrial Systems & Products Catalog',
+        titleAr: 'كتالوج المنتجات والأنظمة الهندسية',
+        subtitleEn: 'Featured pumping packages, boosters, controls, and clean-energy hardware',
+        subtitleAr: 'مختارات من المضخات وأنظمة رفع الضغط ولوحات التحكم وحلول الطاقة',
+        sortOrder: 4,
+        isVisible: true,
+        configJson: { limit: 6 },
+      },
+      {
+        sectionKey: 'partners_strip',
+        sectionType: 'gallery',
+        titleEn: 'Global Engineering Partners',
+        titleAr: 'شركاؤنا العالميون',
+        subtitleEn: 'Authorized partnerships with leading international manufacturers',
+        subtitleAr: 'شراكات ووكالات معتمدة مع أبرز المصنعين العالميين',
+        sortOrder: 5,
+        isVisible: true,
+        configJson: {},
+      },
+      {
+        sectionKey: 'projects_showcase',
+        sectionType: 'project_showcase',
+        titleEn: 'Selected Portfolio & Projects',
+        titleAr: 'مشاريعنا المنجزة',
+        subtitleEn: 'Proven installations across universities, hospitals, venues, and municipalities',
+        subtitleAr: 'مشاريع منفذة في الجامعات والمستشفيات والمنشآت الرياضية والبلديات',
+        sortOrder: 6,
+        isVisible: true,
+        configJson: { limit: 4 },
+      },
+      {
+        sectionKey: 'news_insights',
+        sectionType: 'blog',
+        titleEn: 'News & Technical Insights',
+        titleAr: 'الأخبار والرؤى الفنية',
+        subtitleEn: 'Latest group announcements and engineering briefings',
+        subtitleAr: 'أحدث أخبار المجموعة والمقالات الهندسية',
+        sortOrder: 7,
+        isVisible: true,
+        configJson: { limit: 3 },
+      },
+    ]);
+  }
+}
+
 

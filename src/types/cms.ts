@@ -18,6 +18,13 @@ export interface WebsiteSettings {
   mapEmbedUrl: string | null;
   copyrightEn: string;
   copyrightAr: string;
+  defaultCurrency: string;
+  supportedCurrenciesJson: string[];
+  defaultTaxRate: string;
+  analyticsMeasurementId: string;
+  robotsTxt: string;
+  footerAboutEn: string;
+  footerAboutAr: string;
 }
 
 export interface NavigationItem {
@@ -56,14 +63,67 @@ export interface PageTranslation {
   sectionsJson: Record<string, unknown> | null;
 }
 
+export type PageSectionType =
+  | 'hero'
+  | 'image_text'
+  | 'two_column'
+  | 'gallery'
+  | 'features'
+  | 'stats'
+  | 'testimonials'
+  | 'cta'
+  | 'product_showcase'
+  | 'project_showcase'
+  | 'contact';
+
+export interface PageSectionItem {
+  id: number;
+  pageId: number;
+  sectionType: PageSectionType;
+  sortOrder: number;
+  isVisible: boolean;
+  contentEnJson: Record<string, unknown>;
+  contentArJson: Record<string, unknown>;
+  settingsJson: Record<string, unknown>;
+}
+
 export interface LocalizedPage {
   id: number;
   slug: string;
   template: string;
   heroImageUrl: string;
+  status: string;
+  isVisible: boolean;
   isPublished: boolean;
+  scheduledAt: string | null;
   sortOrder: number;
   translation: PageTranslation | null;
+  sections?: PageSectionItem[];
+}
+
+export interface SectorTranslation {
+  id: number;
+  sectorId: number;
+  locale: Locale;
+  title: string;
+  shortTitle: string;
+  tagline: string;
+  summary: string;
+  description: string;
+  highlightsJson: string[];
+}
+
+export interface LocalizedSector {
+  id: number;
+  slug: string;
+  routePath: string;
+  iconName: string;
+  imageUrl: string;
+  accentColor: string;
+  sortOrder: number;
+  isFeatured: boolean;
+  isPublished: boolean;
+  translation: SectorTranslation | null;
 }
 
 export interface ServiceTranslation {
@@ -140,6 +200,7 @@ export interface ProductTranslation {
   description: string;
   specificationsJson: ProductSpec[];
   applicationsJson: string[];
+  featuresJson?: string[];
 }
 
 export interface LocalizedProduct {
@@ -149,8 +210,22 @@ export interface LocalizedProduct {
   categoryId: number | null;
   partnerId: number | null;
   imageUrl: string;
+  galleryImagesJson: string[];
   datasheetUrl: string;
   division: string;
+  brand: string;
+  modelNumber: string;
+  stockStatus: string;
+  regularPrice: string;
+  discountPrice: string;
+  currency: string;
+  taxRate: string;
+  showPrice: boolean;
+  status: string;
+  seoTitleEn: string;
+  seoTitleAr: string;
+  seoDescEn: string;
+  seoDescAr: string;
   isFeatured: boolean;
   isPublished: boolean;
   sortOrder: number;
@@ -171,13 +246,20 @@ export interface LocalizedProject {
   id: number;
   slug: string;
   clientId: number | null;
+  clientName: string;
   category: string;
   division: string;
+  status: string;
   locationEn: string;
   locationAr: string;
   completionYear: string;
   imageUrl: string;
+  galleryImagesJson: string[];
   videoUrl: string;
+  seoTitleEn: string;
+  seoTitleAr: string;
+  seoDescEn: string;
+  seoDescAr: string;
   isFeatured: boolean;
   isPublished: boolean;
   isPlaceholder: boolean;
@@ -195,11 +277,55 @@ export interface ClientItem {
   isPlaceholder: boolean;
 }
 
+export interface BannerItem {
+  id: number;
+  placement: string;
+  titleEn: string;
+  titleAr: string;
+  subtitleEn: string;
+  subtitleAr: string;
+  ctaTextEn: string;
+  ctaTextAr: string;
+  ctaUrl: string;
+  imageUrl: string;
+  mobileImageUrl: string;
+  sortOrder: number;
+  isPublished: boolean;
+  startsAt: string | null;
+  endsAt: string | null;
+}
+
+export interface HomepageSectionItem {
+  id: number;
+  sectionKey: string;
+  sectionType: string;
+  titleEn: string;
+  titleAr: string;
+  subtitleEn: string;
+  subtitleAr: string;
+  sortOrder: number;
+  isVisible: boolean;
+  configJson: Record<string, unknown>;
+}
+
+export interface TestimonialItem {
+  id: number;
+  authorName: string;
+  authorRoleEn: string;
+  authorRoleAr: string;
+  companyName: string;
+  quoteEn: string;
+  quoteAr: string;
+  isPublished: boolean;
+  isPlaceholder: boolean;
+}
+
 export interface BlogPostItem {
   id: number;
   slug: string;
   categoryEn: string;
   categoryAr: string;
+  tagsJson: string[];
   coverImageUrl: string;
   authorName: string;
   readTimeMinutes: number;
@@ -212,6 +338,10 @@ export interface BlogPostItem {
   excerptAr: string;
   contentEn: string;
   contentAr: string;
+  seoTitleEn: string;
+  seoTitleAr: string;
+  seoDescEn: string;
+  seoDescAr: string;
 }
 
 export interface SeoMetadataItem {
@@ -224,8 +354,19 @@ export interface SeoMetadataItem {
   ogTitle: string;
   ogDescription: string;
   ogImageUrl: string;
+  ogType: string;
   schemaType: string;
   keywords: string;
+  noIndex: boolean;
+}
+
+export interface RedirectItem {
+  id: number;
+  fromPath: string;
+  toPath: string;
+  statusCode: number;
+  isActive: boolean;
+  hits: number;
 }
 
 export interface PublicBootstrapData {
@@ -234,14 +375,19 @@ export interface PublicBootstrapData {
   menus: Record<string, NavigationItem[]>;
   socialLinks: SocialLinkItem[];
   pages: LocalizedPage[];
+  sectors: LocalizedSector[];
   services: LocalizedService[];
   partners: LocalizedPartner[];
   categories: ProductCategory[];
   products: LocalizedProduct[];
   projects: LocalizedProject[];
   clients: ClientItem[];
+  testimonials: TestimonialItem[];
+  banners: BannerItem[];
+  homepageSections: HomepageSectionItem[];
   blogPosts: BlogPostItem[];
   seo: SeoMetadataItem[];
+  redirects: RedirectItem[];
 }
 
 export interface DbUser {

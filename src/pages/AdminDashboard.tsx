@@ -1,186 +1,78 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   Activity,
+  Briefcase,
+  Building2,
+  Compass,
+  Database,
   FileText,
-  FolderKanban,
+  FolderTree,
   Globe,
   Image as ImageIcon,
   Inbox,
+  Languages,
   LayoutDashboard,
+  LayoutGrid,
+  LayoutTemplate,
   LogOut,
   Menu,
+  Moon,
+  Newspaper,
   Package,
-  Plus,
   RefreshCw,
-  Save,
   Settings,
   Shield,
-  Trash2,
-  Upload,
+  Sun,
   Users,
   X,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { ADMIN_SIDEBAR_ITEMS, tAdmin } from '../components/admin/AdminTranslations';
+import { AdminLang, AdminOverviewPayload, AdminTab, AdminTheme } from '../components/admin/AdminTypes';
+import { MediaPickerModal } from '../components/admin/MediaPickerModal';
+import { OverviewModule } from '../components/admin/OverviewModule';
+import {
+  BlogModule,
+  HomepageBannersModule,
+  PagesBuilderModule,
+  SectorsModule,
+  ServicesModule,
+  WebsiteContentHubModule,
+} from '../components/admin/ContentModules';
+import { CategoriesModule, ProductsModule, ProjectsModule } from '../components/admin/CatalogModules';
+import {
+  LeadsModule,
+  MediaLibraryModule,
+  NavigationModule,
+  SeoModule,
+} from '../components/admin/MediaLeadsSeoModules';
+import {
+  BackupsModule,
+  LogsModule,
+  SettingsModule,
+  UsersPermissionsModule,
+} from '../components/admin/SystemModules';
 
-type AdminTab =
-  | 'overview'
-  | 'leads'
-  | 'products'
-  | 'partners'
-  | 'pages'
-  | 'projects'
-  | 'news'
-  | 'media'
-  | 'seo'
-  | 'settings'
-  | 'users';
-
-interface AdminOverviewPayload {
-  settings: Record<string, string>;
-  pages: Array<{
-    id: number;
-    slug: string;
-    en: Record<string, string> | null;
-    ar: Record<string, string> | null;
-  }>;
-  services: Array<{
-    id: number;
-    slug: string;
-    isPublished: boolean;
-    en: { title: string; shortDescription: string; fullDescription: string } | null;
-    ar: { title: string; shortDescription: string; fullDescription: string } | null;
-  }>;
-  partners: Array<{
-    id: number;
-    slug: string;
-    name: string;
-    logoUrl: string;
-    websiteUrl: string;
-    country: string;
-    categoryLabelEn: string;
-    categoryLabelAr: string;
-    sortOrder: number;
-    isFeatured: boolean;
-    isPublished: boolean;
-    en: { displayName: string; tagline: string; description: string } | null;
-    ar: { displayName: string; tagline: string; description: string } | null;
-  }>;
-  categories: Array<{ id: number; slug: string; nameEn: string; nameAr: string }>;
-  products: Array<{
-    id: number;
-    sku: string;
-    slug: string;
-    categoryId: number | null;
-    partnerId: number | null;
-    imageUrl: string;
-    datasheetUrl: string;
-    division: string;
-    isFeatured: boolean;
-    isPublished: boolean;
-    sortOrder: number;
-    en: { name: string; summary: string; description: string; specificationsJson: Array<{ label: string; value: string; unit?: string }> } | null;
-    ar: { name: string; summary: string; description: string; specificationsJson: Array<{ label: string; value: string; unit?: string }> } | null;
-  }>;
-  projects: Array<{
-    id: number;
-    slug: string;
-    category: string;
-    division: string;
-    locationEn: string;
-    locationAr: string;
-    completionYear: string;
-    imageUrl: string;
-    isPublished: boolean;
-    en: { title: string; summary: string; scopeOfWork: string; outcomeNotes: string } | null;
-    ar: { title: string; summary: string; scopeOfWork: string; outcomeNotes: string } | null;
-  }>;
-  blogPosts: Array<{
-    id: number;
-    slug: string;
-    categoryEn: string;
-    categoryAr: string;
-    coverImageUrl: string;
-    readTimeMinutes: number;
-    isPublished: boolean;
-    titleEn: string;
-    titleAr: string;
-    excerptEn: string;
-    excerptAr: string;
-    contentEn: string;
-    contentAr: string;
-  }>;
-  menus: Array<{
-    id: number;
-    location: string;
-    name: string;
-    items: Array<{ id: number; url: string; labelEn: string; labelAr: string; sortOrder: number; isVisible: boolean }>;
-  }>;
-  socialLinks: Array<{ id: number; platform: string; label: string; url: string; isVisible: boolean }>;
-  seoMetadata: Array<{
-    id: number;
-    routeKey: string;
-    locale: 'en' | 'ar';
-    metaTitle: string;
-    metaDescription: string;
-    canonicalPath: string;
-    keywords: string;
-  }>;
-  contactMessages: Array<{
-    id: number;
-    fullName: string;
-    email: string;
-    phone: string;
-    company: string;
-    subject: string;
-    message: string;
-    status: string;
-    adminNotes: string;
-    createdAt: string;
-  }>;
-  quoteRequests: Array<{
-    id: number;
-    fullName: string;
-    companyName: string;
-    businessEmail: string;
-    phone: string;
-    productOrService: string;
-    estimatedQuantity: string;
-    projectDescription: string;
-    preferredContactMethod: string;
-    attachmentAssetId: number | null;
-    attachmentName: string;
-    status: string;
-    adminNotes: string;
-    createdAt: string;
-  }>;
-  mediaAssets: Array<{
-    id: number;
-    filename: string;
-    mimeType: string;
-    sizeBytes: number;
-    url: string;
-    folder: string;
-    createdAt: string;
-  }>;
-  activityLogs: Array<{
-    id: number;
-    userEmail: string;
-    action: string;
-    entityType: string;
-    entityId: string;
-    details: string;
-    createdAt: string;
-  }>;
-  users: Array<{
-    id: number;
-    email: string;
-    displayName: string;
-    roleId: number | null;
-    isActive: boolean;
-    lastLoginAt: string;
-  }>;
-  roles: Array<{ id: number; slug: string; name: string }>;
-}
+const TAB_ICONS: Record<AdminTab, React.ComponentType<{ className?: string }>> = {
+  overview: LayoutDashboard,
+  content: LayoutTemplate,
+  pages: FileText,
+  homepage: LayoutGrid,
+  sectors: Building2,
+  products: Package,
+  categories: FolderTree,
+  services: Briefcase,
+  projects: Compass,
+  media: ImageIcon,
+  blog: Newspaper,
+  seo: Globe,
+  navigation: Menu,
+  leads: Inbox,
+  users: Users,
+  settings: Settings,
+  backups: Database,
+  logs: Activity,
+};
 
 export const AdminDashboard: React.FC = () => {
   const {
@@ -190,86 +82,35 @@ export const AdminDashboard: React.FC = () => {
     authLoading,
     authError,
     signInWithGoogle,
+    signInWithEmail,
+    sendPasswordReset,
     signOut,
     navigate,
     refreshBootstrap,
   } = useApp();
 
+  // Arabic RTL as default admin language, plus Light & Dark themes
+  const [adminLang, setAdminLang] = useState<AdminLang>('ar');
+  const [adminTheme, setAdminTheme] = useState<AdminTheme>('light');
   const [activeTab, setActiveTab] = useState<AdminTab>('overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [data, setData] = useState<AdminOverviewPayload | null>(null);
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
-  // Selected entity editors
-  const [selectedPageId, setSelectedPageId] = useState<number | null>(null);
-  const [pageFormEn, setPageFormEn] = useState<Record<string, string>>({});
-  const [pageFormAr, setPageFormAr] = useState<Record<string, string>>({});
+  // Email/Password login state (no public registration)
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [resetSent, setResetSent] = useState(false);
 
-  const [editingProductId, setEditingProductId] = useState<number | 'new' | null>(null);
-  const [productForm, setProductForm] = useState({
-    sku: '',
-    slug: '',
-    categoryId: '',
-    partnerId: '',
-    imageUrl: '/images/product-pump.jpg',
-    datasheetUrl: '',
-    nameEn: '',
-    summaryEn: '',
-    descriptionEn: '',
-    nameAr: '',
-    summaryAr: '',
-    descriptionAr: '',
-    isFeatured: true,
-  });
+  // Global Media Picker state
+  const [mediaPickerCallback, setMediaPickerCallback] = useState<((url: string) => void) | null>(null);
 
-  const [editingPartnerId, setEditingPartnerId] = useState<number | 'new' | null>(null);
-  const [partnerForm, setPartnerForm] = useState({
-    slug: '',
-    name: '',
-    logoUrl: '',
-    websiteUrl: '',
-    country: '',
-    categoryLabelEn: '',
-    categoryLabelAr: '',
-    displayNameEn: '',
-    taglineEn: '',
-    descriptionEn: '',
-    displayNameAr: '',
-    taglineAr: '',
-    descriptionAr: '',
-  });
-
-  const [editingBlogId, setEditingBlogId] = useState<number | 'new' | null>(null);
-  const [blogForm, setBlogForm] = useState({
-    slug: '',
-    categoryEn: 'Corporate News',
-    categoryAr: 'أخبار الشركة',
-    coverImageUrl: '/images/facility-pump-room.jpg',
-    readTimeMinutes: 4,
-    titleEn: '',
-    titleAr: '',
-    excerptEn: '',
-    excerptAr: '',
-    contentEn: '',
-    contentAr: '',
-  });
-
-  const [seoForm, setSeoForm] = useState({
-    routeKey: 'home',
-    locale: 'en' as 'en' | 'ar',
-    metaTitle: '',
-    metaDescription: '',
-    canonicalPath: '/',
-    keywords: '',
-  });
-
-  const [settingsForm, setSettingsForm] = useState<Record<string, string>>({});
-
-  const notify = (type: 'success' | 'error', text: string) => {
+  const showToast = useCallback((type: 'success' | 'error', text: string) => {
     setToast({ type, text });
-    window.setTimeout(() => setToast(null), 5000);
-  };
+    setTimeout(() => setToast(null), 4200);
+  }, []);
 
   const fetchOverview = useCallback(async () => {
     if (!authToken) return;
@@ -280,41 +121,16 @@ export const AdminDashboard: React.FC = () => {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || 'Unable to load CMS data');
+        throw new Error(err.error || 'Unable to load CMS overview');
       }
-      const payload: AdminOverviewPayload = await res.json();
-      setData(payload);
-      if (payload.settings) setSettingsForm(payload.settings);
-      if (payload.pages.length > 0 && !selectedPageId) {
-        const first = payload.pages[0];
-        setSelectedPageId(first.id);
-        setPageFormEn({
-          title: first.en?.title || '',
-          heroHeading: first.en?.heroHeading || '',
-          heroSubheading: first.en?.heroSubheading || '',
-          heroCtaText: first.en?.heroCtaText || '',
-          heroCtaUrl: first.en?.heroCtaUrl || '/quote',
-          introBannerText: first.en?.introBannerText || '',
-          introBannerCtaText: first.en?.introBannerCtaText || '',
-          bodyContent: first.en?.bodyContent || '',
-        });
-        setPageFormAr({
-          title: first.ar?.title || '',
-          heroHeading: first.ar?.heroHeading || '',
-          heroSubheading: first.ar?.heroSubheading || '',
-          heroCtaText: first.ar?.heroCtaText || '',
-          heroCtaUrl: first.ar?.heroCtaUrl || '/quote',
-          introBannerText: first.ar?.introBannerText || '',
-          introBannerCtaText: first.ar?.introBannerCtaText || '',
-          bodyContent: first.ar?.bodyContent || '',
-        });
-      }
+      const json: AdminOverviewPayload = await res.json();
+      setData(json);
     } catch (err) {
-      notify('error', err instanceof Error ? err.message : 'Failed to load CMS overview');
+      showToast('error', err instanceof Error ? err.message : 'Failed to load CMS data.');
     } finally {
       setLoading(false);
     }
-  }, [authToken, selectedPageId]);
+  }, [authToken, showToast]);
 
   useEffect(() => {
     if (authToken && dbUser && dbUser.roleSlug !== 'viewer') {
@@ -322,89 +138,211 @@ export const AdminDashboard: React.FC = () => {
     }
   }, [authToken, dbUser, fetchOverview]);
 
-  const authFetch = async (url: string, options: RequestInit = {}) => {
-    const res = await fetch(url, {
-      ...options,
-      headers: {
-        ...(options.headers || {}),
-        Authorization: `Bearer ${authToken}`,
-      },
-    });
-    const payload = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(payload.error || 'Request failed');
-    await refreshBootstrap();
-    return payload;
+  const apiRequest = useCallback(
+    async (url: string, options: RequestInit = {}) => {
+      if (!authToken) throw new Error('Not authenticated');
+      const res = await fetch(url, {
+        ...options,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${authToken}`,
+          ...(options.headers || {}),
+        },
+      });
+      return res;
+    },
+    [authToken]
+  );
+
+  const handleTabSwitch = (nextTab: AdminTab) => {
+    if (hasUnsavedChanges) {
+      const proceed = window.confirm(
+        tAdmin(
+          adminLang,
+          'لديك تعديلات غير محفوظة. هل تريد الانتقال دون حفظ؟',
+          'You have unsaved changes. Leave this section anyway?'
+        )
+      );
+      if (!proceed) return;
+      setHasUnsavedChanges(false);
+    }
+    setActiveTab(nextTab);
+    setSidebarOpen(false);
   };
 
-  // Unauthenticated Gate
+  const reloadAll = async () => {
+    await fetchOverview();
+    await refreshBootstrap();
+  };
+
+  // Auth loading state
   if (authLoading) {
     return (
-      <div className="min-h-[70vh] flex items-center justify-center bg-slate-50">
-        <p className="text-sm text-slate-600">Verifying administrator session...</p>
+      <div
+        dir={adminLang === 'ar' ? 'rtl' : 'ltr'}
+        className={`${adminTheme === 'dark' ? 'dark' : ''} min-h-screen bg-slate-100 dark:bg-slate-950 flex items-center justify-center p-6`}
+      >
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-8 max-w-md w-full text-center space-y-3">
+          <div className="w-8 h-8 border-2 border-[#133D68] border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-sm text-slate-600 dark:text-slate-300">
+            {tAdmin(adminLang, 'جاري التحقق من جلسة المسؤول...', 'Verifying administrator session...')}
+          </p>
+        </div>
       </div>
     );
   }
 
-  if (!firebaseUser) {
+  // Unauthenticated Sign-In Screen
+  if (!firebaseUser || !dbUser) {
     return (
-      <div className="min-h-[75vh] flex items-center justify-center bg-slate-50 px-4">
-        <div className="max-w-md w-full bg-white border border-slate-200 rounded-xl p-8 space-y-6 text-center">
-          <div className="w-12 h-12 rounded-full bg-[#133D68]/10 text-[#133D68] flex items-center justify-center mx-auto">
-            <Shield className="w-6 h-6" />
+      <div
+        dir={adminLang === 'ar' ? 'rtl' : 'ltr'}
+        className={`${adminTheme === 'dark' ? 'dark' : ''} min-h-screen bg-[#0C2B4B] flex items-center justify-center p-6`}
+      >
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl max-w-md w-full p-8 space-y-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-lg bg-[#133D68] text-white flex items-center justify-center">
+                <Shield className="w-6 h-6" />
+              </div>
+              <div>
+                <h1 className="text-lg font-extrabold text-[#133D68] dark:text-white">
+                  {tAdmin(adminLang, 'بوابة إدارة مجموعة بارك المتحدة', 'United Park Group Enterprise CMS')}
+                </h1>
+                <p className="text-xs text-slate-500">
+                  {tAdmin(adminLang, 'لوحة تحكم المسؤولين المصرح لهم فقط', 'Authorized Administrative Portal')}
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setAdminLang((l) => (l === 'ar' ? 'en' : 'ar'))}
+              className="px-2.5 py-1 rounded border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200"
+            >
+              {adminLang === 'ar' ? 'EN' : 'عربي'}
+            </button>
           </div>
-          <div className="space-y-2">
-            <h1 className="text-2xl font-bold text-[#133D68]">PARK Admin CMS Portal</h1>
-            <p className="text-sm text-slate-600">
-              Sign in with your authorized Google administrator account to manage bilingual pages, products, partners, SEO, and incoming quotation requests.
-            </p>
-          </div>
+
           {authError && (
-            <div className="p-3 rounded-md bg-red-50 border border-red-200 text-xs text-red-700">
+            <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-xs text-rose-700">
               {authError}
             </div>
           )}
+
+          {resetSent && (
+            <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-xs text-emerald-700">
+              {tAdmin(
+                adminLang,
+                'تم إرسال رابط استعادة كلمة المرور إلى بريدك الإلكتروني.',
+                'Password reset link sent to your email.'
+              )}
+            </div>
+          )}
+
           <button
             type="button"
             onClick={signInWithGoogle}
-            className="w-full py-3 px-5 bg-[#133D68] hover:bg-[#0C2B4B] text-white text-sm font-semibold rounded-md transition-colors"
+            className="w-full py-3 bg-[#133D68] hover:bg-[#0C2B4B] text-white text-sm font-semibold rounded-lg transition-colors"
           >
-            Sign in with Google
+            {tAdmin(adminLang, 'تسجيل الدخول عبر حساب Google', 'Sign In with Google Workspace')}
           </button>
+
+          <div className="relative text-center text-[11px] text-slate-400">
+            <span className="bg-white dark:bg-slate-900 px-2 relative z-10">
+              {tAdmin(adminLang, 'أو بالبريد الإلكتروني وكلمة المرور', 'OR EMAIL & PASSWORD')}
+            </span>
+            <div className="border-t border-slate-200 dark:border-slate-800 absolute inset-x-0 top-1/2" />
+          </div>
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              signInWithEmail(loginEmail, loginPassword);
+            }}
+            className="space-y-3"
+          >
+            <input
+              type="email"
+              required
+              value={loginEmail}
+              onChange={(e) => setLoginEmail(e.target.value)}
+              placeholder={tAdmin(adminLang, 'البريد الإلكتروني الوظيفي', 'Corporate Email')}
+              className="w-full px-3 py-2.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+            />
+            <input
+              type="password"
+              required
+              value={loginPassword}
+              onChange={(e) => setLoginPassword(e.target.value)}
+              placeholder={tAdmin(adminLang, 'كلمة المرور', 'Password')}
+              className="w-full px-3 py-2.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+            />
+            <div className="flex items-center justify-between text-xs">
+              <button
+                type="button"
+                onClick={async () => {
+                  if (!loginEmail) return;
+                  await sendPasswordReset(loginEmail).catch(() => {});
+                  setResetSent(true);
+                }}
+                className="text-[#133D68] dark:text-sky-400 hover:underline"
+              >
+                {tAdmin(adminLang, 'نسيت كلمة المرور؟', 'Forgot password?')}
+              </button>
+            </div>
+            <button
+              type="submit"
+              className="w-full py-2.5 border border-[#133D68] text-[#133D68] dark:text-white dark:border-slate-600 text-xs font-bold rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800"
+            >
+              {tAdmin(adminLang, 'دخول بالبريد الإلكتروني', 'Sign In With Email')}
+            </button>
+          </form>
+
           <button
             type="button"
             onClick={() => navigate('/')}
-            className="text-xs text-slate-500 hover:text-[#133D68]"
+            className="w-full py-2.5 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-medium rounded-lg"
           >
-            ← Return to Public Website
+            {tAdmin(adminLang, 'العودة إلى الموقع العام', 'Return to Public Website')}
           </button>
         </div>
       </div>
     );
   }
 
-  // Authenticated but viewer role (RBAC protection)
-  if (dbUser && dbUser.roleSlug === 'viewer') {
+  // Pending / Viewer role screen
+  if (dbUser.roleSlug === 'viewer') {
     return (
-      <div className="min-h-[75vh] flex items-center justify-center bg-slate-50 px-4">
-        <div className="max-w-md w-full bg-white border border-slate-200 rounded-xl p-8 space-y-5 text-center">
-          <h1 className="text-xl font-bold text-slate-900">Administrator Role Required</h1>
+      <div
+        dir={adminLang === 'ar' ? 'rtl' : 'ltr'}
+        className="min-h-screen bg-slate-100 flex items-center justify-center p-6"
+      >
+        <div className="bg-white border border-slate-200 rounded-2xl max-w-lg w-full p-8 text-center space-y-4">
+          <Shield className="w-10 h-10 text-amber-500 mx-auto" />
+          <h2 className="text-xl font-bold text-[#133D68]">
+            {tAdmin(adminLang, 'الحساب بانتظار اعتماد الصلاحية', 'Role Assignment Required')}
+          </h2>
           <p className="text-sm text-slate-600">
-            Signed in as <span className="font-semibold">{dbUser.email}</span>. Your account currently has the <span className="font-mono-tabular">viewer</span> role. Ask a Super Administrator to promote your account under Users & Roles.
+            {tAdmin(
+              adminLang,
+              `تم تسجيل الدخول بنجاح (${dbUser.email})، لكن حسابك حالياً بدور مشاهد (Viewer) بانتظار ترقيته من المدير الأعلى.`,
+              `Signed in as ${dbUser.email}. Your account currently holds Viewer access until a Super Administrator assigns an editorial or admin role.`
+            )}
           </p>
-          <div className="flex justify-center gap-3">
+          <div className="flex items-center justify-center gap-3 pt-2">
             <button
               type="button"
               onClick={signOut}
-              className="px-4 py-2 border border-slate-300 text-sm rounded-md"
+              className="px-4 py-2 bg-slate-100 text-slate-800 text-xs font-semibold rounded-lg"
             >
-              Sign Out
+              {tAdmin(adminLang, 'تسجيل الخروج', 'Sign Out')}
             </button>
             <button
               type="button"
               onClick={() => navigate('/')}
-              className="px-4 py-2 bg-[#133D68] text-white text-sm rounded-md"
+              className="px-4 py-2 bg-[#133D68] text-white text-xs font-semibold rounded-lg"
             >
-              Public Site
+              {tAdmin(adminLang, 'الموقع العام', 'Public Site')}
             </button>
           </div>
         </div>
@@ -412,263 +350,165 @@ export const AdminDashboard: React.FC = () => {
     );
   }
 
-  const navItems: Array<{ id: AdminTab; label: string; icon: React.ComponentType<{ className?: string }> }> = [
-    { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-    { id: 'leads', label: 'Quotes & Messages', icon: Inbox },
-    { id: 'products', label: 'Products & Categories', icon: Package },
-    { id: 'partners', label: 'Partners & Logos', icon: Globe },
-    { id: 'pages', label: 'Pages (EN / AR)', icon: FileText },
-    { id: 'projects', label: 'Projects & Services', icon: FolderKanban },
-    { id: 'news', label: 'News & Insights', icon: Activity },
-    { id: 'media', label: 'Media Library', icon: ImageIcon },
-    { id: 'seo', label: 'SEO & Menus', icon: Globe },
-    { id: 'settings', label: 'Site Settings', icon: Settings },
-    { id: 'users', label: 'Users & Audit Logs', icon: Users },
-  ];
+  const activeNavMeta = ADMIN_SIDEBAR_ITEMS.find((i) => i.id === activeTab);
 
-  const handleSavePageTranslations = async () => {
-    if (!selectedPageId) return;
-    try {
-      await authFetch(`/api/admin/pages/${selectedPageId}/translations/en`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(pageFormEn),
-      });
-      await authFetch(`/api/admin/pages/${selectedPageId}/translations/ar`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(pageFormAr),
-      });
-      notify('success', 'Saved English & Arabic page content to Cloud SQL PostgreSQL.');
-      await fetchOverview();
-    } catch (err) {
-      notify('error', err instanceof Error ? err.message : 'Save failed');
-    }
-  };
-
-  const handleSaveProduct = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const payload = {
-      sku: productForm.sku,
-      slug: productForm.slug,
-      categoryId: productForm.categoryId ? Number(productForm.categoryId) : null,
-      partnerId: productForm.partnerId ? Number(productForm.partnerId) : null,
-      imageUrl: productForm.imageUrl,
-      datasheetUrl: productForm.datasheetUrl,
-      division: 'pumps',
-      isFeatured: productForm.isFeatured,
-      isPublished: true,
-      sortOrder: 0,
-      en: {
-        name: productForm.nameEn,
-        summary: productForm.summaryEn,
-        description: productForm.descriptionEn,
-        specificationsJson: [],
-        applicationsJson: [],
-      },
-      ar: {
-        name: productForm.nameAr,
-        summary: productForm.summaryAr,
-        description: productForm.descriptionAr,
-        specificationsJson: [],
-        applicationsJson: [],
-      },
-    };
-    try {
-      if (editingProductId === 'new') {
-        await authFetch('/api/admin/products', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-        notify('success', 'Product created.');
-      } else if (typeof editingProductId === 'number') {
-        await authFetch(`/api/admin/products/${editingProductId}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-        notify('success', 'Product updated.');
+  const moduleProps = data
+    ? {
+        data,
+        adminLang,
+        apiRequest,
+        authToken,
+        showToast,
+        reloadData: reloadAll,
+        openMediaPicker: (cb: (url: string) => void) => setMediaPickerCallback(() => cb),
+        setActiveTab: handleTabSwitch,
+        navigate,
+        markDirty: setHasUnsavedChanges,
       }
-      setEditingProductId(null);
-      await fetchOverview();
-    } catch (err) {
-      notify('error', err instanceof Error ? err.message : 'Failed to save product');
-    }
-  };
-
-  const handleSavePartner = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const payload = {
-      slug: partnerForm.slug,
-      name: partnerForm.name,
-      logoUrl: partnerForm.logoUrl,
-      websiteUrl: partnerForm.websiteUrl,
-      country: partnerForm.country,
-      categoryLabelEn: partnerForm.categoryLabelEn,
-      categoryLabelAr: partnerForm.categoryLabelAr,
-      sortOrder: 0,
-      isFeatured: true,
-      isPublished: true,
-      en: {
-        displayName: partnerForm.displayNameEn || partnerForm.name,
-        tagline: partnerForm.taglineEn,
-        description: partnerForm.descriptionEn,
-        highlightsJson: [],
-      },
-      ar: {
-        displayName: partnerForm.displayNameAr || partnerForm.name,
-        tagline: partnerForm.taglineAr,
-        description: partnerForm.descriptionAr,
-        highlightsJson: [],
-      },
-    };
-    try {
-      if (editingPartnerId === 'new') {
-        await authFetch('/api/admin/partners', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-        notify('success', 'Partner created.');
-      } else if (typeof editingPartnerId === 'number') {
-        await authFetch(`/api/admin/partners/${editingPartnerId}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-        notify('success', 'Partner updated.');
-      }
-      setEditingPartnerId(null);
-      await fetchOverview();
-    } catch (err) {
-      notify('error', err instanceof Error ? err.message : 'Failed to save partner');
-    }
-  };
-
-  const handleMediaUpload = async (file: File, folder = 'cms') => {
-    const fd = new FormData();
-    fd.append('file', file);
-    fd.append('folder', folder);
-    try {
-      const uploaded = await authFetch('/api/admin/media', { method: 'POST', body: fd });
-      notify('success', `Uploaded ${uploaded.filename} -> ${uploaded.url}`);
-      await fetchOverview();
-      return uploaded.url as string;
-    } catch (err) {
-      notify('error', err instanceof Error ? err.message : 'Upload failed');
-      return null;
-    }
-  };
+    : null;
 
   return (
-    <div dir="ltr" className="min-h-screen bg-slate-50 flex">
-      {/* Sidebar (260px fixed per SaaS dashboard guidelines) */}
+    <div
+      dir={adminLang === 'ar' ? 'rtl' : 'ltr'}
+      className={`${adminTheme === 'dark' ? 'dark' : ''} min-h-screen bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex`}
+    >
+      {/* Mobile Sidebar Backdrop */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-slate-950/60 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* 18-Section Responsive Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 w-64 bg-[#0B192C] text-slate-200 flex flex-col border-r border-slate-800 transform transition-transform lg:static lg:translate-x-0 ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        className={`fixed lg:sticky top-0 inset-y-0 start-0 z-40 w-72 h-screen bg-[#0C2B4B] text-white flex flex-col shrink-0 transition-transform duration-200 ${
+          sidebarOpen
+            ? 'translate-x-0'
+            : adminLang === 'ar'
+              ? 'translate-x-full lg:translate-x-0'
+              : '-translate-x-full lg:translate-x-0'
         }`}
       >
-        <div className="px-5 py-4 border-b border-slate-800 flex items-center justify-between">
+        <div className="px-5 py-4 border-b border-white/10 flex items-center justify-between">
           <div>
-            <span className="font-display font-bold text-white text-base tracking-tight">
-              PARK CMS
-            </span>
-            <p className="text-[11px] text-slate-400">United Park Group</p>
+            <div className="text-base font-extrabold tracking-tight">UNITED PARK GROUP</div>
+            <div className="text-[11px] text-sky-200">
+              {tAdmin(adminLang, 'منصة الإدارة المؤسسية (CMS)', 'Enterprise CMS Portal')}
+            </div>
           </div>
-          <button
-            type="button"
-            onClick={() => setSidebarOpen(false)}
-            className="lg:hidden text-slate-400 hover:text-white"
-          >
+          <button type="button" onClick={() => setSidebarOpen(false)} className="lg:hidden p-1">
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto p-3 space-y-1">
-          {navItems.map((item) => {
-            const Icon = item.icon;
+        <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-1">
+          {ADMIN_SIDEBAR_ITEMS.map((item) => {
+            const Icon = TAB_ICONS[item.id];
             const active = activeTab === item.id;
             return (
               <button
                 key={item.id}
                 type="button"
-                onClick={() => {
-                  setActiveTab(item.id);
-                  setSidebarOpen(false);
-                }}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm rounded-md transition-colors text-left ${
+                onClick={() => handleTabSwitch(item.id)}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold transition-colors ${
                   active
-                    ? 'bg-[#16487A] text-white font-semibold'
-                    : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                    ? 'bg-[#D93829] text-white shadow-sm'
+                    : 'text-slate-200 hover:bg-white/10 hover:text-white'
                 }`}
               >
                 <Icon className="w-4 h-4 shrink-0" />
-                <span className="truncate">{item.label}</span>
+                <span className="truncate">{tAdmin(adminLang, item.ar, item.en)}</span>
               </button>
             );
           })}
         </nav>
 
-        <div className="p-4 border-t border-slate-800 space-y-3">
-          <div className="text-xs">
-            <p className="font-semibold text-white truncate">{dbUser?.displayName || dbUser?.email}</p>
-            <p className="text-slate-400">{dbUser?.roleName}</p>
-          </div>
-          <div className="flex items-center gap-2">
+        <div className="p-4 border-t border-white/10 space-y-2 text-xs">
+          <div className="truncate font-bold text-white">{dbUser.displayName || dbUser.email}</div>
+          <div className="text-[11px] text-sky-200">{dbUser.roleName}</div>
+          <div className="flex items-center gap-2 pt-1">
             <button
               type="button"
               onClick={() => navigate('/')}
-              className="flex-1 py-1.5 px-2.5 text-xs bg-white/10 hover:bg-white/15 rounded text-white"
+              className="flex-1 py-1.5 rounded bg-white/10 hover:bg-white/20 text-[11px] font-semibold"
             >
-              View Site
+              {tAdmin(adminLang, 'الموقع العام', 'View Site')}
             </button>
             <button
               type="button"
               onClick={signOut}
-              className="py-1.5 px-2.5 text-xs bg-red-600/20 hover:bg-red-600/30 text-red-200 rounded inline-flex items-center gap-1"
+              className="p-1.5 rounded bg-rose-500/20 hover:bg-rose-500/40 text-rose-200"
+              title={tAdmin(adminLang, 'تسجيل الخروج', 'Sign Out')}
             >
-              <LogOut className="w-3.5 h-3.5" />
-              <span>Out</span>
+              <LogOut className="w-4 h-4" />
             </button>
           </div>
         </div>
       </aside>
 
-      {/* Main Content */}
+      {/* Main Workspace */}
       <div className="flex-1 min-w-0 flex flex-col">
-        <header className="bg-white border-b border-slate-200 px-6 py-3.5 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
+        <header className="sticky top-0 z-20 bg-white/95 dark:bg-slate-900/95 backdrop-blur border-b border-slate-200 dark:border-slate-800 px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
             <button
               type="button"
               onClick={() => setSidebarOpen(true)}
-              className="lg:hidden p-2 rounded border border-slate-200"
+              className="lg:hidden p-2 rounded-lg border border-slate-200 dark:border-slate-700"
             >
-              <Menu className="w-4 h-4" />
+              <Menu className="w-5 h-5" />
             </button>
-            <div className="text-sm text-slate-500">
-              <span>CMS</span> /{' '}
-              <span className="font-semibold text-slate-900 capitalize">{activeTab}</span>
+            <div className="min-w-0">
+              <h2 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white truncate">
+                {activeNavMeta ? tAdmin(adminLang, activeNavMeta.ar, activeNavMeta.en) : ''}
+              </h2>
+              <p className="text-[11px] text-slate-500 hidden sm:block">
+                {tAdmin(
+                  adminLang,
+                  'كافة التغييرات تحفظ مباشرة في Cloud SQL PostgreSQL وتنعكس على الموقع العام.',
+                  'All edits persist directly to Cloud SQL PostgreSQL and update the public site live.'
+                )}
+              </p>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={fetchOverview}
-            disabled={loading}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold border border-slate-300 rounded-md hover:bg-slate-50"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-            <span>Refresh</span>
-          </button>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setAdminLang((l) => (l === 'ar' ? 'en' : 'ar'))}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800"
+            >
+              <Languages className="w-3.5 h-3.5" />
+              <span>{adminLang === 'ar' ? 'EN' : 'العربية'}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setAdminTheme((th) => (th === 'light' ? 'dark' : 'light'))}
+              className="p-2 rounded-lg border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800"
+              title={tAdmin(adminLang, 'تبديل المظهر الفاتح/الداكن', 'Toggle Light/Dark Theme')}
+            >
+              {adminTheme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4 text-amber-400" />}
+            </button>
+
+            <button
+              type="button"
+              onClick={fetchOverview}
+              className="p-2 rounded-lg border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800"
+              title={tAdmin(adminLang, 'تحديث البيانات', 'Refresh')}
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
         </header>
 
         {toast && (
-          <div className="mx-6 mt-4">
+          <div className="px-4 sm:px-6 pt-4">
             <div
-              className={`px-4 py-3 rounded-md text-sm font-medium border ${
+              className={`px-4 py-3 rounded-xl text-xs font-bold border ${
                 toast.type === 'success'
-                  ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-                  : 'bg-red-50 border-red-200 text-red-800'
+                  ? 'bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-950/40 dark:border-emerald-800 dark:text-emerald-200'
+                  : 'bg-rose-50 border-rose-200 text-rose-800 dark:bg-rose-950/40 dark:border-rose-800 dark:text-rose-200'
               }`}
             >
               {toast.text}
@@ -676,1212 +516,51 @@ export const AdminDashboard: React.FC = () => {
           </div>
         )}
 
-        <main className="flex-1 p-6 space-y-6">
-          {!data && loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="h-24 bg-white border border-slate-200 rounded-lg animate-pulse" />
-              ))}
+        <main className="flex-1 p-4 sm:p-6">
+          {!data || !moduleProps ? (
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-12 text-center text-sm text-slate-500">
+              {tAdmin(adminLang, 'جاري تحميل بيانات لوحة التحكم...', 'Loading Enterprise CMS workspace...')}
             </div>
           ) : (
-            data && (
-              <>
-                {/* OVERVIEW TAB */}
-                {activeTab === 'overview' && (
-                  <div className="space-y-6">
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                      {[
-                        { label: 'Quote Requests', val: data.quoteRequests.length },
-                        { label: 'Contact Inquiries', val: data.contactMessages.length },
-                        { label: 'Catalog Products', val: data.products.length },
-                        { label: 'Global Partners', val: data.partners.length },
-                      ].map((kpi) => (
-                        <div key={kpi.label} className="bg-white border border-slate-200 rounded-lg p-5">
-                          <p className="text-xs text-slate-500">{kpi.label}</p>
-                          <p className="text-2xl font-bold text-[#133D68] font-mono-tabular mt-1">
-                            {kpi.val}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
-                      <div className="px-5 py-3.5 border-b border-slate-200 flex items-center justify-between">
-                        <h2 className="text-sm font-bold text-slate-900">Recent Quote Requests</h2>
-                        <button
-                          type="button"
-                          onClick={() => setActiveTab('leads')}
-                          className="text-xs font-semibold text-[#133D68] hover:underline"
-                        >
-                          Manage All →
-                        </button>
-                      </div>
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
-                          <thead className="bg-slate-50 text-xs text-slate-500 border-b border-slate-200">
-                            <tr>
-                              <th className="px-4 py-2.5 text-left">ID</th>
-                              <th className="px-4 py-2.5 text-left">Company</th>
-                              <th className="px-4 py-2.5 text-left">Product / Service</th>
-                              <th className="px-4 py-2.5 text-left">Status</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-100">
-                            {data.quoteRequests.slice(0, 5).map((q) => (
-                              <tr key={q.id} className="h-10">
-                                <td className="px-4 font-mono-tabular">#{q.id}</td>
-                                <td className="px-4 font-medium">{q.companyName}</td>
-                                <td className="px-4 text-slate-600">{q.productOrService}</td>
-                                <td className="px-4 capitalize text-xs font-semibold text-[#133D68]">
-                                  {q.status}
-                                </td>
-                              </tr>
-                            ))}
-                            {data.quoteRequests.length === 0 && (
-                              <tr>
-                                <td colSpan={4} className="px-4 py-6 text-center text-slate-500 text-xs">
-                                  No quote requests submitted yet.
-                                </td>
-                              </tr>
-                            )}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* LEADS TAB (Quotes & Contact Messages) */}
-                {activeTab === 'leads' && (
-                  <div className="space-y-8">
-                    <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
-                      <div className="px-5 py-4 border-b border-slate-200">
-                        <h2 className="text-base font-bold text-slate-900">
-                          Quotation Requests ({data.quoteRequests.length})
-                        </h2>
-                      </div>
-                      <div className="divide-y divide-slate-200">
-                        {data.quoteRequests.map((q) => (
-                          <div key={q.id} className="p-5 space-y-3">
-                            <div className="flex flex-wrap items-center justify-between gap-2">
-                              <div>
-                                <span className="font-mono-tabular text-xs text-slate-400">#{q.id}</span>{' '}
-                                <span className="font-bold text-slate-900">{q.companyName}</span> —{' '}
-                                <span className="text-sm text-slate-600">{q.fullName}</span>
-                              </div>
-                              <select
-                                value={q.status}
-                                onChange={async (e) => {
-                                  await authFetch(`/api/admin/quotes/${q.id}`, {
-                                    method: 'PUT',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ status: e.target.value, adminNotes: q.adminNotes || '' }),
-                                  });
-                                  notify('success', `Quote #${q.id} marked ${e.target.value}`);
-                                  fetchOverview();
-                                }}
-                                className="px-2.5 py-1 text-xs border border-slate-300 rounded bg-white"
-                              >
-                                <option value="new">New</option>
-                                <option value="in_review">In Review</option>
-                                <option value="quoted">Quoted</option>
-                                <option value="archived">Archived</option>
-                              </select>
-                            </div>
-                            <p className="text-xs text-slate-600">
-                              Email: {q.businessEmail} · Phone: {q.phone} · Preferred: {q.preferredContactMethod} · Product: <strong>{q.productOrService}</strong> ({q.estimatedQuantity || 'Qty unspecified'})
-                            </p>
-                            <p className="text-sm text-slate-700 bg-slate-50 p-3 rounded border border-slate-200">
-                              {q.projectDescription}
-                            </p>
-                            {q.attachmentAssetId && (
-                              <a
-                                href={`/api/media/${q.attachmentAssetId}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-block text-xs font-semibold text-[#133D68] hover:underline"
-                              >
-                                Download Attachment: {q.attachmentName}
-                              </a>
-                            )}
-                          </div>
-                        ))}
-                        {data.quoteRequests.length === 0 && (
-                          <p className="p-6 text-sm text-slate-500">No quote requests yet.</p>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
-                      <div className="px-5 py-4 border-b border-slate-200">
-                        <h2 className="text-base font-bold text-slate-900">
-                          Contact Submissions ({data.contactMessages.length})
-                        </h2>
-                      </div>
-                      <div className="divide-y divide-slate-200">
-                        {data.contactMessages.map((m) => (
-                          <div key={m.id} className="p-5 space-y-2">
-                            <div className="flex items-center justify-between">
-                              <span className="font-bold text-sm text-slate-900">
-                                {m.subject} — {m.fullName} ({m.email})
-                              </span>
-                              <select
-                                value={m.status}
-                                onChange={async (e) => {
-                                  await authFetch(`/api/admin/contacts/${m.id}`, {
-                                    method: 'PUT',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ status: e.target.value, adminNotes: m.adminNotes || '' }),
-                                  });
-                                  notify('success', `Message #${m.id} updated`);
-                                  fetchOverview();
-                                }}
-                                className="px-2.5 py-1 text-xs border border-slate-300 rounded bg-white"
-                              >
-                                <option value="new">New</option>
-                                <option value="responded">Responded</option>
-                                <option value="archived">Archived</option>
-                              </select>
-                            </div>
-                            <p className="text-sm text-slate-700">{m.message}</p>
-                          </div>
-                        ))}
-                        {data.contactMessages.length === 0 && (
-                          <p className="p-6 text-sm text-slate-500">No contact inquiries yet.</p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* PRODUCTS TAB */}
-                {activeTab === 'products' && (
-                  <div className="space-y-6">
-                    <div className="flex items-center justify-between">
-                      <h2 className="text-lg font-bold text-slate-900">Products Catalog</h2>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setEditingProductId('new');
-                          setProductForm({
-                            sku: '',
-                            slug: '',
-                            categoryId: String(data.categories[0]?.id || ''),
-                            partnerId: String(data.partners[0]?.id || ''),
-                            imageUrl: '/images/product-pump.jpg',
-                            datasheetUrl: '',
-                            nameEn: '',
-                            summaryEn: '',
-                            descriptionEn: '',
-                            nameAr: '',
-                            summaryAr: '',
-                            descriptionAr: '',
-                            isFeatured: true,
-                          });
-                        }}
-                        className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#133D68] text-white text-xs font-semibold rounded-md"
-                      >
-                        <Plus className="w-4 h-4" />
-                        <span>Add Product</span>
-                      </button>
-                    </div>
-
-                    {editingProductId !== null && (
-                      <form
-                        onSubmit={handleSaveProduct}
-                        className="bg-white border border-slate-200 rounded-lg p-6 space-y-4"
-                      >
-                        <div className="flex items-center justify-between">
-                          <h3 className="font-bold text-slate-900">
-                            {editingProductId === 'new' ? 'Create Product' : 'Edit Product'}
-                          </h3>
-                          <button type="button" onClick={() => setEditingProductId(null)} className="text-xs text-slate-500">
-                            Cancel
-                          </button>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <input
-                            required
-                            placeholder="SKU (e.g. PRK-100)"
-                            value={productForm.sku}
-                            onChange={(e) => setProductForm({ ...productForm, sku: e.target.value })}
-                            className="px-3 py-2 text-sm border border-slate-300 rounded"
-                          />
-                          <input
-                            required
-                            placeholder="Slug (e.g. booster-100)"
-                            value={productForm.slug}
-                            onChange={(e) => setProductForm({ ...productForm, slug: e.target.value })}
-                            className="px-3 py-2 text-sm border border-slate-300 rounded"
-                          />
-                          <input
-                            placeholder="Image URL"
-                            value={productForm.imageUrl}
-                            onChange={(e) => setProductForm({ ...productForm, imageUrl: e.target.value })}
-                            className="px-3 py-2 text-sm border border-slate-300 rounded"
-                          />
-                          <select
-                            value={productForm.categoryId}
-                            onChange={(e) => setProductForm({ ...productForm, categoryId: e.target.value })}
-                            className="px-3 py-2 text-sm border border-slate-300 rounded bg-white"
-                          >
-                            <option value="">Select Category</option>
-                            {data.categories.map((c) => (
-                              <option key={c.id} value={c.id}>
-                                {c.nameEn}
-                              </option>
-                            ))}
-                          </select>
-                          <select
-                            value={productForm.partnerId}
-                            onChange={(e) => setProductForm({ ...productForm, partnerId: e.target.value })}
-                            className="px-3 py-2 text-sm border border-slate-300 rounded bg-white"
-                          >
-                            <option value="">Select Partner</option>
-                            {data.partners.map((pt) => (
-                              <option key={pt.id} value={pt.id}>
-                                {pt.name}
-                              </option>
-                            ))}
-                          </select>
-                          <input
-                            placeholder="Datasheet URL (optional)"
-                            value={productForm.datasheetUrl}
-                            onChange={(e) => setProductForm({ ...productForm, datasheetUrl: e.target.value })}
-                            className="px-3 py-2 text-sm border border-slate-300 rounded"
-                          />
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="space-y-3 p-4 bg-slate-50 rounded border border-slate-200">
-                            <p className="text-xs font-bold text-slate-700">English Content</p>
-                            <input
-                              required
-                              placeholder="English Product Name"
-                              value={productForm.nameEn}
-                              onChange={(e) => setProductForm({ ...productForm, nameEn: e.target.value })}
-                              className="w-full px-3 py-2 text-sm border border-slate-300 rounded bg-white"
-                            />
-                            <input
-                              required
-                              placeholder="English Summary"
-                              value={productForm.summaryEn}
-                              onChange={(e) => setProductForm({ ...productForm, summaryEn: e.target.value })}
-                              className="w-full px-3 py-2 text-sm border border-slate-300 rounded bg-white"
-                            />
-                            <textarea
-                              rows={3}
-                              placeholder="English Full Description"
-                              value={productForm.descriptionEn}
-                              onChange={(e) => setProductForm({ ...productForm, descriptionEn: e.target.value })}
-                              className="w-full px-3 py-2 text-sm border border-slate-300 rounded bg-white"
-                            />
-                          </div>
-                          <div dir="rtl" className="space-y-3 p-4 bg-slate-50 rounded border border-slate-200">
-                            <p className="text-xs font-bold text-slate-700">المحتوى العربي</p>
-                            <input
-                              required
-                              placeholder="اسم المنتج بالعربية"
-                              value={productForm.nameAr}
-                              onChange={(e) => setProductForm({ ...productForm, nameAr: e.target.value })}
-                              className="w-full px-3 py-2 text-sm border border-slate-300 rounded bg-white"
-                            />
-                            <input
-                              required
-                              placeholder="ملخص قصير"
-                              value={productForm.summaryAr}
-                              onChange={(e) => setProductForm({ ...productForm, summaryAr: e.target.value })}
-                              className="w-full px-3 py-2 text-sm border border-slate-300 rounded bg-white"
-                            />
-                            <textarea
-                              rows={3}
-                              placeholder="الوصف الكامل بالعربية"
-                              value={productForm.descriptionAr}
-                              onChange={(e) => setProductForm({ ...productForm, descriptionAr: e.target.value })}
-                              className="w-full px-3 py-2 text-sm border border-slate-300 rounded bg-white"
-                            />
-                          </div>
-                        </div>
-
-                        <button
-                          type="submit"
-                          className="px-5 py-2.5 bg-[#133D68] text-white text-xs font-semibold rounded-md"
-                        >
-                          Save Product
-                        </button>
-                      </form>
-                    )}
-
-                    <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
-                      <table className="w-full text-sm">
-                        <thead className="bg-slate-50 text-xs text-slate-500 border-b border-slate-200">
-                          <tr>
-                            <th className="px-4 py-2.5 text-left">SKU</th>
-                            <th className="px-4 py-2.5 text-left">English Name</th>
-                            <th className="px-4 py-2.5 text-left">Arabic Name</th>
-                            <th className="px-4 py-2.5 text-right">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                          {data.products.map((pr) => (
-                            <tr key={pr.id} className="h-11">
-                              <td className="px-4 font-mono-tabular text-xs">{pr.sku}</td>
-                              <td className="px-4 font-medium">{pr.en?.name}</td>
-                              <td className="px-4 text-slate-600">{pr.ar?.name}</td>
-                              <td className="px-4 text-right space-x-2">
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setEditingProductId(pr.id);
-                                    setProductForm({
-                                      sku: pr.sku,
-                                      slug: pr.slug,
-                                      categoryId: pr.categoryId ? String(pr.categoryId) : '',
-                                      partnerId: pr.partnerId ? String(pr.partnerId) : '',
-                                      imageUrl: pr.imageUrl || '/images/product-pump.jpg',
-                                      datasheetUrl: pr.datasheetUrl || '',
-                                      nameEn: pr.en?.name || '',
-                                      summaryEn: pr.en?.summary || '',
-                                      descriptionEn: pr.en?.description || '',
-                                      nameAr: pr.ar?.name || '',
-                                      summaryAr: pr.ar?.summary || '',
-                                      descriptionAr: pr.ar?.description || '',
-                                      isFeatured: pr.isFeatured,
-                                    });
-                                  }}
-                                  className="text-xs font-semibold text-[#133D68] hover:underline"
-                                >
-                                  Edit
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={async () => {
-                                    if (!window.confirm(`Delete product ${pr.sku}?`)) return;
-                                    await authFetch(`/api/admin/products/${pr.id}`, { method: 'DELETE' });
-                                    notify('success', 'Product deleted');
-                                    fetchOverview();
-                                  }}
-                                  className="text-xs text-red-600 hover:underline inline-flex items-center gap-0.5"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                )}
-
-                {/* PARTNERS TAB */}
-                {activeTab === 'partners' && (
-                  <div className="space-y-6">
-                    <div className="flex items-center justify-between">
-                      <h2 className="text-lg font-bold text-slate-900">Partners & Manufacturer Logos</h2>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setEditingPartnerId('new');
-                          setPartnerForm({
-                            slug: '',
-                            name: '',
-                            logoUrl: '',
-                            websiteUrl: '',
-                            country: '',
-                            categoryLabelEn: '',
-                            categoryLabelAr: '',
-                            displayNameEn: '',
-                            taglineEn: '',
-                            descriptionEn: '',
-                            displayNameAr: '',
-                            taglineAr: '',
-                            descriptionAr: '',
-                          });
-                        }}
-                        className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#133D68] text-white text-xs font-semibold rounded-md"
-                      >
-                        <Plus className="w-4 h-4" />
-                        <span>Add Partner</span>
-                      </button>
-                    </div>
-
-                    {editingPartnerId !== null && (
-                      <form onSubmit={handleSavePartner} className="bg-white border border-slate-200 rounded-lg p-6 space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <input
-                            required
-                            placeholder="Slug (e.g. grundfos)"
-                            value={partnerForm.slug}
-                            onChange={(e) => setPartnerForm({ ...partnerForm, slug: e.target.value })}
-                            className="px-3 py-2 text-sm border border-slate-300 rounded"
-                          />
-                          <input
-                            required
-                            placeholder="Brand Name"
-                            value={partnerForm.name}
-                            onChange={(e) => setPartnerForm({ ...partnerForm, name: e.target.value })}
-                            className="px-3 py-2 text-sm border border-slate-300 rounded"
-                          />
-                          <input
-                            placeholder="Country"
-                            value={partnerForm.country}
-                            onChange={(e) => setPartnerForm({ ...partnerForm, country: e.target.value })}
-                            className="px-3 py-2 text-sm border border-slate-300 rounded"
-                          />
-                          <input
-                            placeholder="Official Website URL"
-                            value={partnerForm.websiteUrl}
-                            onChange={(e) => setPartnerForm({ ...partnerForm, websiteUrl: e.target.value })}
-                            className="px-3 py-2 text-sm border border-slate-300 rounded"
-                          />
-                          <div className="md:col-span-2 flex items-center gap-3">
-                            <input
-                              placeholder="Logo URL (upload or paste)"
-                              value={partnerForm.logoUrl}
-                              onChange={(e) => setPartnerForm({ ...partnerForm, logoUrl: e.target.value })}
-                              className="flex-1 px-3 py-2 text-sm border border-slate-300 rounded"
-                            />
-                            <label className="px-3 py-2 text-xs font-semibold border border-slate-300 rounded cursor-pointer hover:bg-slate-50 inline-flex items-center gap-1.5">
-                              <Upload className="w-3.5 h-3.5" />
-                              <span>Upload Logo</span>
-                              <input
-                                type="file"
-                                accept="image/*"
-                                className="hidden"
-                                onChange={async (e) => {
-                                  const f = e.target.files?.[0];
-                                  if (!f) return;
-                                  const url = await handleMediaUpload(f, 'partners');
-                                  if (url) setPartnerForm((prev) => ({ ...prev, logoUrl: url }));
-                                }}
-                              />
-                            </label>
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="space-y-2 p-4 bg-slate-50 rounded border border-slate-200">
-                            <p className="text-xs font-bold">English Profile</p>
-                            <input
-                              placeholder="Display Name (EN)"
-                              value={partnerForm.displayNameEn}
-                              onChange={(e) => setPartnerForm({ ...partnerForm, displayNameEn: e.target.value })}
-                              className="w-full px-3 py-2 text-sm border border-slate-300 rounded bg-white"
-                            />
-                            <textarea
-                              rows={3}
-                              required
-                              placeholder="Description (EN)"
-                              value={partnerForm.descriptionEn}
-                              onChange={(e) => setPartnerForm({ ...partnerForm, descriptionEn: e.target.value })}
-                              className="w-full px-3 py-2 text-sm border border-slate-300 rounded bg-white"
-                            />
-                          </div>
-                          <div dir="rtl" className="space-y-2 p-4 bg-slate-50 rounded border border-slate-200">
-                            <p className="text-xs font-bold">الملف بالعربية</p>
-                            <input
-                              placeholder="الاسم بالعربية"
-                              value={partnerForm.displayNameAr}
-                              onChange={(e) => setPartnerForm({ ...partnerForm, displayNameAr: e.target.value })}
-                              className="w-full px-3 py-2 text-sm border border-slate-300 rounded bg-white"
-                            />
-                            <textarea
-                              rows={3}
-                              required
-                              placeholder="الوصف بالعربية"
-                              value={partnerForm.descriptionAr}
-                              onChange={(e) => setPartnerForm({ ...partnerForm, descriptionAr: e.target.value })}
-                              className="w-full px-3 py-2 text-sm border border-slate-300 rounded bg-white"
-                            />
-                          </div>
-                        </div>
-
-                        <div className="flex gap-3">
-                          <button type="submit" className="px-5 py-2 bg-[#133D68] text-white text-xs font-semibold rounded-md">
-                            Save Partner
-                          </button>
-                          <button type="button" onClick={() => setEditingPartnerId(null)} className="px-4 py-2 text-xs text-slate-600">
-                            Cancel
-                          </button>
-                        </div>
-                      </form>
-                    )}
-
-                    <div className="bg-white border border-slate-200 rounded-lg divide-y divide-slate-100">
-                      {data.partners.map((pt) => (
-                        <div key={pt.id} className="p-4 flex items-center justify-between gap-4">
-                          <div>
-                            <p className="font-bold text-sm text-slate-900">{pt.name}</p>
-                            <p className="text-xs text-slate-500">{pt.country} · {pt.websiteUrl}</p>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setEditingPartnerId(pt.id);
-                                setPartnerForm({
-                                  slug: pt.slug,
-                                  name: pt.name,
-                                  logoUrl: pt.logoUrl || '',
-                                  websiteUrl: pt.websiteUrl || '',
-                                  country: pt.country || '',
-                                  categoryLabelEn: pt.categoryLabelEn || '',
-                                  categoryLabelAr: pt.categoryLabelAr || '',
-                                  displayNameEn: pt.en?.displayName || pt.name,
-                                  taglineEn: pt.en?.tagline || '',
-                                  descriptionEn: pt.en?.description || '',
-                                  displayNameAr: pt.ar?.displayName || pt.name,
-                                  taglineAr: pt.ar?.tagline || '',
-                                  descriptionAr: pt.ar?.description || '',
-                                });
-                              }}
-                              className="text-xs font-semibold text-[#133D68] hover:underline"
-                            >
-                              Edit / Logo
-                            </button>
-                            <button
-                              type="button"
-                              onClick={async () => {
-                                if (!window.confirm(`Delete partner ${pt.name}?`)) return;
-                                await authFetch(`/api/admin/partners/${pt.id}`, { method: 'DELETE' });
-                                notify('success', 'Partner deleted');
-                                fetchOverview();
-                              }}
-                              className="text-xs text-red-600"
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* PAGES (EN / AR) TAB */}
-                {activeTab === 'pages' && (
-                  <div className="space-y-6">
-                    <div className="flex flex-wrap items-center justify-between gap-4">
-                      <select
-                        value={selectedPageId || ''}
-                        onChange={(e) => {
-                          const p = data.pages.find((pg) => pg.id === Number(e.target.value));
-                          if (!p) return;
-                          setSelectedPageId(p.id);
-                          setPageFormEn({
-                            title: p.en?.title || '',
-                            heroHeading: p.en?.heroHeading || '',
-                            heroSubheading: p.en?.heroSubheading || '',
-                            heroCtaText: p.en?.heroCtaText || '',
-                            heroCtaUrl: p.en?.heroCtaUrl || '/quote',
-                            introBannerText: p.en?.introBannerText || '',
-                            introBannerCtaText: p.en?.introBannerCtaText || '',
-                            bodyContent: p.en?.bodyContent || '',
-                          });
-                          setPageFormAr({
-                            title: p.ar?.title || '',
-                            heroHeading: p.ar?.heroHeading || '',
-                            heroSubheading: p.ar?.heroSubheading || '',
-                            heroCtaText: p.ar?.heroCtaText || '',
-                            heroCtaUrl: p.ar?.heroCtaUrl || '/quote',
-                            introBannerText: p.ar?.introBannerText || '',
-                            introBannerCtaText: p.ar?.introBannerCtaText || '',
-                            bodyContent: p.ar?.bodyContent || '',
-                          });
-                        }}
-                        className="px-4 py-2 text-sm border border-slate-300 rounded-md bg-white font-semibold"
-                      >
-                        {data.pages.map((p) => (
-                          <option key={p.id} value={p.id}>
-                            Page: {p.slug}
-                          </option>
-                        ))}
-                      </select>
-
-                      <button
-                        type="button"
-                        onClick={handleSavePageTranslations}
-                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#133D68] text-white text-xs font-semibold rounded-md"
-                      >
-                        <Save className="w-4 h-4" />
-                        <span>Save Bilingual Page</span>
-                      </button>
-                    </div>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      <div className="bg-white border border-slate-200 rounded-lg p-5 space-y-3">
-                        <h3 className="font-bold text-sm text-[#133D68]">English Version</h3>
-                        <input
-                          placeholder="Title"
-                          value={pageFormEn.title || ''}
-                          onChange={(e) => setPageFormEn({ ...pageFormEn, title: e.target.value })}
-                          className="w-full px-3 py-2 text-sm border border-slate-300 rounded"
-                        />
-                        <input
-                          placeholder="Hero Heading"
-                          value={pageFormEn.heroHeading || ''}
-                          onChange={(e) => setPageFormEn({ ...pageFormEn, heroHeading: e.target.value })}
-                          className="w-full px-3 py-2 text-sm border border-slate-300 rounded"
-                        />
-                        <textarea
-                          rows={2}
-                          placeholder="Hero Subheading"
-                          value={pageFormEn.heroSubheading || ''}
-                          onChange={(e) => setPageFormEn({ ...pageFormEn, heroSubheading: e.target.value })}
-                          className="w-full px-3 py-2 text-sm border border-slate-300 rounded"
-                        />
-                        <input
-                          placeholder="Intro Banner Text"
-                          value={pageFormEn.introBannerText || ''}
-                          onChange={(e) => setPageFormEn({ ...pageFormEn, introBannerText: e.target.value })}
-                          className="w-full px-3 py-2 text-sm border border-slate-300 rounded"
-                        />
-                        <textarea
-                          rows={5}
-                          placeholder="Body Content"
-                          value={pageFormEn.bodyContent || ''}
-                          onChange={(e) => setPageFormEn({ ...pageFormEn, bodyContent: e.target.value })}
-                          className="w-full px-3 py-2 text-sm border border-slate-300 rounded"
-                        />
-                      </div>
-
-                      <div dir="rtl" className="bg-white border border-slate-200 rounded-lg p-5 space-y-3">
-                        <h3 className="font-bold text-sm text-[#133D68]">النسخة العربية</h3>
-                        <input
-                          placeholder="العنوان"
-                          value={pageFormAr.title || ''}
-                          onChange={(e) => setPageFormAr({ ...pageFormAr, title: e.target.value })}
-                          className="w-full px-3 py-2 text-sm border border-slate-300 rounded"
-                        />
-                        <input
-                          placeholder="العنوان الرئيسي"
-                          value={pageFormAr.heroHeading || ''}
-                          onChange={(e) => setPageFormAr({ ...pageFormAr, heroHeading: e.target.value })}
-                          className="w-full px-3 py-2 text-sm border border-slate-300 rounded"
-                        />
-                        <textarea
-                          rows={2}
-                          placeholder="الوصف الرئيسي"
-                          value={pageFormAr.heroSubheading || ''}
-                          onChange={(e) => setPageFormAr({ ...pageFormAr, heroSubheading: e.target.value })}
-                          className="w-full px-3 py-2 text-sm border border-slate-300 rounded"
-                        />
-                        <input
-                          placeholder="نص الشريط التعريفي"
-                          value={pageFormAr.introBannerText || ''}
-                          onChange={(e) => setPageFormAr({ ...pageFormAr, introBannerText: e.target.value })}
-                          className="w-full px-3 py-2 text-sm border border-slate-300 rounded"
-                        />
-                        <textarea
-                          rows={5}
-                          placeholder="المحتوى التفصيلي"
-                          value={pageFormAr.bodyContent || ''}
-                          onChange={(e) => setPageFormAr({ ...pageFormAr, bodyContent: e.target.value })}
-                          className="w-full px-3 py-2 text-sm border border-slate-300 rounded"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* PROJECTS & SERVICES TAB */}
-                {activeTab === 'projects' && (
-                  <div className="space-y-6">
-                    <div className="bg-white border border-slate-200 rounded-lg p-5 space-y-4">
-                      <h2 className="font-bold text-base text-slate-900">Reference Projects ({data.projects.length})</h2>
-                      <div className="divide-y divide-slate-100">
-                        {data.projects.map((prj) => (
-                          <div key={prj.id} className="py-3 flex items-center justify-between gap-4">
-                            <div>
-                              <p className="font-semibold text-sm text-slate-900">{prj.en?.title}</p>
-                              <p className="text-xs text-slate-500">{prj.category} · {prj.locationEn}</p>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={async () => {
-                                if (!window.confirm(`Delete project ${prj.slug}?`)) return;
-                                await authFetch(`/api/admin/projects/${prj.id}`, { method: 'DELETE' });
-                                notify('success', 'Project deleted');
-                                fetchOverview();
-                              }}
-                              className="text-xs text-red-600 hover:underline"
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="bg-white border border-slate-200 rounded-lg p-5 space-y-4">
-                      <h2 className="font-bold text-base text-slate-900">Core Engineering Services ({data.services.length})</h2>
-                      <div className="divide-y divide-slate-100">
-                        {data.services.map((srv) => (
-                          <div key={srv.id} className="py-3 flex items-center justify-between gap-4">
-                            <div>
-                              <p className="font-semibold text-sm text-slate-900">{srv.en?.title} / {srv.ar?.title}</p>
-                              <p className="text-xs text-slate-500">{srv.en?.shortDescription}</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* NEWS TAB */}
-                {activeTab === 'news' && (
-                  <div className="space-y-6">
-                    <div className="flex items-center justify-between">
-                      <h2 className="text-lg font-bold text-slate-900">News & Insights Articles</h2>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setEditingBlogId('new');
-                          setBlogForm({
-                            slug: '',
-                            categoryEn: 'Corporate News',
-                            categoryAr: 'أخبار الشركة',
-                            coverImageUrl: '/images/facility-pump-room.jpg',
-                            readTimeMinutes: 4,
-                            titleEn: '',
-                            titleAr: '',
-                            excerptEn: '',
-                            excerptAr: '',
-                            contentEn: '',
-                            contentAr: '',
-                          });
-                        }}
-                        className="px-4 py-2 bg-[#133D68] text-white text-xs font-semibold rounded-md"
-                      >
-                        + Publish Article
-                      </button>
-                    </div>
-
-                    {editingBlogId !== null && (
-                      <form
-                        onSubmit={async (e) => {
-                          e.preventDefault();
-                          const method = editingBlogId === 'new' ? 'POST' : 'PUT';
-                          const url =
-                            editingBlogId === 'new'
-                              ? '/api/admin/blog'
-                              : `/api/admin/blog/${editingBlogId}`;
-                          await authFetch(url, {
-                            method,
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ ...blogForm, isPublished: true }),
-                          });
-                          notify('success', 'Article saved.');
-                          setEditingBlogId(null);
-                          fetchOverview();
-                        }}
-                        className="bg-white border border-slate-200 rounded-lg p-6 space-y-4"
-                      >
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                          <input
-                            required
-                            placeholder="Slug"
-                            value={blogForm.slug}
-                            onChange={(e) => setBlogForm({ ...blogForm, slug: e.target.value })}
-                            className="px-3 py-2 text-sm border border-slate-300 rounded"
-                          />
-                          <input
-                            required
-                            placeholder="Title (EN)"
-                            value={blogForm.titleEn}
-                            onChange={(e) => setBlogForm({ ...blogForm, titleEn: e.target.value })}
-                            className="px-3 py-2 text-sm border border-slate-300 rounded"
-                          />
-                          <input
-                            required
-                            dir="rtl"
-                            placeholder="العنوان (AR)"
-                            value={blogForm.titleAr}
-                            onChange={(e) => setBlogForm({ ...blogForm, titleAr: e.target.value })}
-                            className="px-3 py-2 text-sm border border-slate-300 rounded"
-                          />
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          <textarea
-                            required
-                            rows={2}
-                            placeholder="Excerpt (EN)"
-                            value={blogForm.excerptEn}
-                            onChange={(e) => setBlogForm({ ...blogForm, excerptEn: e.target.value })}
-                            className="px-3 py-2 text-sm border border-slate-300 rounded"
-                          />
-                          <textarea
-                            required
-                            dir="rtl"
-                            rows={2}
-                            placeholder="المقتطف (AR)"
-                            value={blogForm.excerptAr}
-                            onChange={(e) => setBlogForm({ ...blogForm, excerptAr: e.target.value })}
-                            className="px-3 py-2 text-sm border border-slate-300 rounded"
-                          />
-                          <textarea
-                            required
-                            rows={4}
-                            placeholder="Article Content (EN)"
-                            value={blogForm.contentEn}
-                            onChange={(e) => setBlogForm({ ...blogForm, contentEn: e.target.value })}
-                            className="px-3 py-2 text-sm border border-slate-300 rounded"
-                          />
-                          <textarea
-                            required
-                            dir="rtl"
-                            rows={4}
-                            placeholder="محتوى المقال (AR)"
-                            value={blogForm.contentAr}
-                            onChange={(e) => setBlogForm({ ...blogForm, contentAr: e.target.value })}
-                            className="px-3 py-2 text-sm border border-slate-300 rounded"
-                          />
-                        </div>
-                        <div className="flex gap-3">
-                          <button type="submit" className="px-5 py-2 bg-[#133D68] text-white text-xs font-semibold rounded">
-                            Save Article
-                          </button>
-                          <button type="button" onClick={() => setEditingBlogId(null)} className="text-xs text-slate-600">
-                            Cancel
-                          </button>
-                        </div>
-                      </form>
-                    )}
-
-                    <div className="bg-white border border-slate-200 rounded-lg divide-y divide-slate-100">
-                      {data.blogPosts.map((b) => (
-                        <div key={b.id} className="p-4 flex items-center justify-between gap-4">
-                          <div>
-                            <p className="font-bold text-sm text-slate-900">{b.titleEn}</p>
-                            <p className="text-xs text-slate-500">{b.titleAr}</p>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={async () => {
-                              if (!window.confirm('Delete this article?')) return;
-                              await authFetch(`/api/admin/blog/${b.id}`, { method: 'DELETE' });
-                              notify('success', 'Article deleted');
-                              fetchOverview();
-                            }}
-                            className="text-xs text-red-600 hover:underline"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* MEDIA LIBRARY TAB */}
-                {activeTab === 'media' && (
-                  <div className="space-y-6">
-                    <div className="bg-white border border-slate-200 rounded-lg p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-                      <div>
-                        <h2 className="font-bold text-base text-slate-900">Upload Media Asset</h2>
-                        <p className="text-xs text-slate-500">
-                          Upload PNG, JPG, WEBP, SVG logos, or PDF technical datasheets directly into Cloud SQL media storage.
-                        </p>
-                      </div>
-                      <label className="px-5 py-2.5 bg-[#133D68] text-white text-xs font-semibold rounded-md cursor-pointer inline-flex items-center gap-2">
-                        <Upload className="w-4 h-4" />
-                        <span>Select File to Upload</span>
-                        <input
-                          type="file"
-                          className="hidden"
-                          onChange={(e) => {
-                            const f = e.target.files?.[0];
-                            if (f) handleMediaUpload(f, 'library');
-                          }}
-                        />
-                      </label>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {data.mediaAssets.map((m) => (
-                        <div key={m.id} className="bg-white border border-slate-200 rounded-lg p-4 space-y-2">
-                          <p className="font-semibold text-sm text-slate-900 truncate">{m.filename}</p>
-                          <p className="text-xs text-slate-500 font-mono-tabular">
-                            {m.mimeType} · {(m.sizeBytes / 1024).toFixed(1)} KB
-                          </p>
-                          <input
-                            readOnly
-                            value={m.url}
-                            onClick={(e) => (e.target as HTMLInputElement).select()}
-                            className="w-full px-2.5 py-1.5 text-xs font-mono-tabular bg-slate-50 border border-slate-200 rounded"
-                          />
-                        </div>
-                      ))}
-                      {data.mediaAssets.length === 0 && (
-                        <p className="text-sm text-slate-500">No uploaded files yet.</p>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* SEO & MENUS TAB */}
-                {activeTab === 'seo' && (
-                  <div className="space-y-6">
-                    <form
-                      onSubmit={async (e) => {
-                        e.preventDefault();
-                        await authFetch('/api/admin/seo', {
-                          method: 'PUT',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify(seoForm),
-                        });
-                        notify('success', 'SEO metadata saved.');
-                        fetchOverview();
-                      }}
-                      className="bg-white border border-slate-200 rounded-lg p-6 space-y-4"
-                    >
-                      <h2 className="font-bold text-base text-slate-900">Bilingual SEO Metadata Editor</h2>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <input
-                          required
-                          placeholder="Route Key (home, products, partners)"
-                          value={seoForm.routeKey}
-                          onChange={(e) => setSeoForm({ ...seoForm, routeKey: e.target.value })}
-                          className="px-3 py-2 text-sm border border-slate-300 rounded"
-                        />
-                        <select
-                          value={seoForm.locale}
-                          onChange={(e) => setSeoForm({ ...seoForm, locale: e.target.value as 'en' | 'ar' })}
-                          className="px-3 py-2 text-sm border border-slate-300 rounded bg-white"
-                        >
-                          <option value="en">English (en)</option>
-                          <option value="ar">Arabic (ar)</option>
-                        </select>
-                        <input
-                          required
-                          placeholder="Canonical Path (/ or /ar)"
-                          value={seoForm.canonicalPath}
-                          onChange={(e) => setSeoForm({ ...seoForm, canonicalPath: e.target.value })}
-                          className="px-3 py-2 text-sm border border-slate-300 rounded"
-                        />
-                      </div>
-                      <input
-                        required
-                        placeholder="Meta Title (30-60 chars)"
-                        value={seoForm.metaTitle}
-                        onChange={(e) => setSeoForm({ ...seoForm, metaTitle: e.target.value })}
-                        className="w-full px-3 py-2 text-sm border border-slate-300 rounded"
-                      />
-                      <textarea
-                        required
-                        rows={2}
-                        placeholder="Meta Description (120-160 chars)"
-                        value={seoForm.metaDescription}
-                        onChange={(e) => setSeoForm({ ...seoForm, metaDescription: e.target.value })}
-                        className="w-full px-3 py-2 text-sm border border-slate-300 rounded"
-                      />
-                      <button type="submit" className="px-5 py-2 bg-[#133D68] text-white text-xs font-semibold rounded">
-                        Save SEO Entry
-                      </button>
-                    </form>
-
-                    <div className="bg-white border border-slate-200 rounded-lg p-5 space-y-3">
-                      <h3 className="font-bold text-sm text-slate-900">Configured SEO Entries</h3>
-                      <div className="divide-y divide-slate-100">
-                        {data.seoMetadata.map((s) => (
-                          <div key={s.id} className="py-2.5 flex items-center justify-between gap-4 text-xs">
-                            <div>
-                              <span className="font-mono-tabular font-bold uppercase text-[#133D68]">
-                                {s.routeKey} ({s.locale})
-                              </span>
-                              <p className="text-slate-700 mt-0.5">{s.metaTitle}</p>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setSeoForm({
-                                  routeKey: s.routeKey,
-                                  locale: s.locale,
-                                  metaTitle: s.metaTitle,
-                                  metaDescription: s.metaDescription,
-                                  canonicalPath: s.canonicalPath,
-                                  keywords: s.keywords || '',
-                                })
-                              }
-                              className="text-[#133D68] font-semibold hover:underline"
-                            >
-                              Load
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* SETTINGS TAB */}
-                {activeTab === 'settings' && (
-                  <div className="space-y-6">
-                    <form
-                      onSubmit={async (e) => {
-                        e.preventDefault();
-                        await authFetch('/api/admin/settings', {
-                          method: 'PUT',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify(settingsForm),
-                        });
-                        notify('success', 'Corporate settings updated.');
-                        fetchOverview();
-                      }}
-                      className="bg-white border border-slate-200 rounded-lg p-6 space-y-4"
-                    >
-                      <h2 className="font-bold text-base text-slate-900">Corporate Website Settings</h2>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <input
-                          value={settingsForm.companyNameEn || ''}
-                          onChange={(e) => setSettingsForm({ ...settingsForm, companyNameEn: e.target.value })}
-                          placeholder="Company Name (EN)"
-                          className="px-3 py-2 text-sm border border-slate-300 rounded"
-                        />
-                        <input
-                          dir="rtl"
-                          value={settingsForm.companyNameAr || ''}
-                          onChange={(e) => setSettingsForm({ ...settingsForm, companyNameAr: e.target.value })}
-                          placeholder="اسم الشركة (AR)"
-                          className="px-3 py-2 text-sm border border-slate-300 rounded"
-                        />
-                        <input
-                          value={settingsForm.phone || ''}
-                          onChange={(e) => setSettingsForm({ ...settingsForm, phone: e.target.value })}
-                          placeholder="Phone"
-                          className="px-3 py-2 text-sm border border-slate-300 rounded"
-                        />
-                        <input
-                          value={settingsForm.email || ''}
-                          onChange={(e) => setSettingsForm({ ...settingsForm, email: e.target.value })}
-                          placeholder="Email"
-                          className="px-3 py-2 text-sm border border-slate-300 rounded"
-                        />
-                        <input
-                          value={settingsForm.addressEn || ''}
-                          onChange={(e) => setSettingsForm({ ...settingsForm, addressEn: e.target.value })}
-                          placeholder="Address (EN)"
-                          className="px-3 py-2 text-sm border border-slate-300 rounded"
-                        />
-                        <input
-                          dir="rtl"
-                          value={settingsForm.addressAr || ''}
-                          onChange={(e) => setSettingsForm({ ...settingsForm, addressAr: e.target.value })}
-                          placeholder="العنوان (AR)"
-                          className="px-3 py-2 text-sm border border-slate-300 rounded"
-                        />
-                      </div>
-                      <button type="submit" className="px-5 py-2.5 bg-[#133D68] text-white text-xs font-semibold rounded">
-                        Save Settings
-                      </button>
-                    </form>
-
-                    {/* Social Links */}
-                    <div className="bg-white border border-slate-200 rounded-lg p-6 space-y-3">
-                      <h3 className="font-bold text-sm text-slate-900">Social Media Links</h3>
-                      <div className="divide-y divide-slate-100">
-                        {data.socialLinks.map((soc) => (
-                          <div key={soc.id} className="py-2.5 flex items-center justify-between gap-4 text-sm">
-                            <span className="font-semibold w-28">{soc.label}</span>
-                            <input
-                              defaultValue={soc.url}
-                              onBlur={async (e) => {
-                                if (e.target.value === soc.url) return;
-                                await authFetch(`/api/admin/social-links/${soc.id}`, {
-                                  method: 'PUT',
-                                  headers: { 'Content-Type': 'application/json' },
-                                  body: JSON.stringify({ url: e.target.value, isVisible: soc.isVisible }),
-                                });
-                                notify('success', `Updated ${soc.label} URL`);
-                              }}
-                              className="flex-1 px-3 py-1.5 text-xs border border-slate-300 rounded"
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* USERS & AUDIT LOGS TAB */}
-                {activeTab === 'users' && (
-                  <div className="space-y-6">
-                    <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
-                      <div className="px-5 py-4 border-b border-slate-200">
-                        <h2 className="font-bold text-base text-slate-900">Administrator Accounts & Roles</h2>
-                      </div>
-                      <table className="w-full text-sm">
-                        <thead className="bg-slate-50 text-xs text-slate-500 border-b border-slate-200">
-                          <tr>
-                            <th className="px-4 py-2.5 text-left">User</th>
-                            <th className="px-4 py-2.5 text-left">Email</th>
-                            <th className="px-4 py-2.5 text-left">Role</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                          {data.users.map((u) => (
-                            <tr key={u.id} className="h-11">
-                              <td className="px-4 font-medium">{u.displayName}</td>
-                              <td className="px-4 text-slate-600">{u.email}</td>
-                              <td className="px-4">
-                                <select
-                                  value={u.roleId || ''}
-                                  disabled={u.id === dbUser?.id}
-                                  onChange={async (e) => {
-                                    await authFetch(`/api/admin/users/${u.id}/role`, {
-                                      method: 'PUT',
-                                      headers: { 'Content-Type': 'application/json' },
-                                      body: JSON.stringify({ roleId: Number(e.target.value), isActive: u.isActive }),
-                                    });
-                                    notify('success', `Updated role for ${u.email}`);
-                                    fetchOverview();
-                                  }}
-                                  className="px-2.5 py-1 text-xs border border-slate-300 rounded bg-white"
-                                >
-                                  {data.roles.map((r) => (
-                                    <option key={r.id} value={r.id}>
-                                      {r.name}
-                                    </option>
-                                  ))}
-                                </select>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-
-                    <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
-                      <div className="px-5 py-4 border-b border-slate-200">
-                        <h2 className="font-bold text-base text-slate-900">Activity Audit Logs</h2>
-                      </div>
-                      <div className="max-h-96 overflow-y-auto divide-y divide-slate-100">
-                        {data.activityLogs.map((log) => (
-                          <div key={log.id} className="px-5 py-2.5 text-xs flex items-center justify-between gap-4">
-                            <div>
-                              <span className="font-mono-tabular font-bold text-[#133D68]">{log.action}</span>{' '}
-                              <span className="text-slate-600">[{log.entityType}]</span> —{' '}
-                              <span className="text-slate-900">{log.details}</span>
-                            </div>
-                            <span className="text-slate-400 font-mono-tabular shrink-0">
-                              {log.userEmail}
-                            </span>
-                          </div>
-                        ))}
-                        {data.activityLogs.length === 0 && (
-                          <p className="p-5 text-xs text-slate-500">No audit entries recorded yet.</p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </>
-            )
+            <>
+              {activeTab === 'overview' && <OverviewModule {...moduleProps} />}
+              {activeTab === 'content' && <WebsiteContentHubModule {...moduleProps} />}
+              {activeTab === 'pages' && <PagesBuilderModule {...moduleProps} />}
+              {activeTab === 'homepage' && <HomepageBannersModule {...moduleProps} />}
+              {activeTab === 'sectors' && <SectorsModule {...moduleProps} />}
+              {activeTab === 'products' && <ProductsModule {...moduleProps} />}
+              {activeTab === 'categories' && <CategoriesModule {...moduleProps} />}
+              {activeTab === 'services' && <ServicesModule {...moduleProps} />}
+              {activeTab === 'projects' && <ProjectsModule {...moduleProps} />}
+              {activeTab === 'media' && <MediaLibraryModule {...moduleProps} />}
+              {activeTab === 'blog' && <BlogModule {...moduleProps} />}
+              {activeTab === 'seo' && <SeoModule {...moduleProps} />}
+              {activeTab === 'navigation' && <NavigationModule {...moduleProps} />}
+              {activeTab === 'leads' && <LeadsModule {...moduleProps} />}
+              {activeTab === 'users' && <UsersPermissionsModule {...moduleProps} />}
+              {activeTab === 'settings' && <SettingsModule {...moduleProps} />}
+              {activeTab === 'backups' && <BackupsModule {...moduleProps} />}
+              {activeTab === 'logs' && <LogsModule {...moduleProps} />}
+            </>
           )}
         </main>
       </div>
+
+      {/* Global Media Picker Modal */}
+      {data && (
+        <MediaPickerModal
+          open={Boolean(mediaPickerCallback)}
+          onClose={() => setMediaPickerCallback(null)}
+          onSelect={(url) => {
+            if (mediaPickerCallback) mediaPickerCallback(url);
+          }}
+          data={data}
+          adminLang={adminLang}
+          authToken={authToken}
+          reloadData={reloadAll}
+          showToast={showToast}
+        />
+      )}
     </div>
   );
 };

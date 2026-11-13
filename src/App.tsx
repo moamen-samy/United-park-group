@@ -9,6 +9,7 @@ import {
   AboutPage,
   ContactPage,
   DivisionPage,
+  DynamicCmsPage,
   NewsPage,
   ProjectsPage,
   QuotePage,
@@ -110,6 +111,13 @@ const AppRouter: React.FC = () => {
     }
     if (currentPath === '/quote') {
       return <QuotePage />;
+    }
+    if (currentPath.startsWith('/p/')) {
+      return <DynamicCmsPage slug={currentPath.replace('/p/', '')} />;
+    }
+    const cleanSlug = currentPath.replace(/^\//, '');
+    if (cleanSlug && bootstrap?.pages.some((p) => p.slug === cleanSlug)) {
+      return <DynamicCmsPage slug={cleanSlug} />;
     }
 
     return (

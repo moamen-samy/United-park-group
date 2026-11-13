@@ -14,6 +14,414 @@ import {
 import { useApp } from '../context/AppContext';
 import { ResilientImage } from '../components/ResilientImage';
 import { GROUP_SECTORS, getSectorByKey, SectorKey } from '../data/sectors';
+import type { PageSectionItem } from '../types/cms';
+
+/* ---------------- REUSABLE 11-TYPE SECTION BLOCK RENDERER ---------------- */
+export const SectionBlockRenderer: React.FC<{
+  sections?: PageSectionItem[];
+}> = ({ sections }) => {
+  const { locale, isRtl, navigate, bootstrap, setPreselectedProduct } = useApp();
+  const isAr = locale === 'ar';
+  const ArrowIcon = isRtl ? ArrowLeft : ArrowRight;
+
+  const visibleSections = (sections || []).filter((s) => s.isVisible !== false);
+  if (visibleSections.length === 0) return null;
+
+  return (
+    <div className="space-y-12">
+      {visibleSections.map((sec) => {
+        const primary = isAr ? sec.contentArJson : sec.contentEnJson;
+        const fallback = isAr ? sec.contentEnJson : sec.contentArJson;
+        const heading = String(primary?.heading || fallback?.heading || '');
+        const body = String(primary?.body || fallback?.body || '');
+        const imageUrl = String(primary?.imageUrl || fallback?.imageUrl || '');
+        const ctaText = String(primary?.ctaText || fallback?.ctaText || '');
+        const ctaUrl = String(primary?.ctaUrl || fallback?.ctaUrl || '/contact');
+        const itemsRaw = Array.isArray(primary?.items) && primary.items.length > 0
+          ? primary.items
+          : Array.isArray(fallback?.items)
+            ? fallback.items
+            : [];
+        const items = itemsRaw.map((x) => String(x)).filter(Boolean);
+
+        switch (sec.sectionType) {
+          case 'hero':
+            return (
+              <section key={sec.id} className="relative rounded-2xl overflow-hidden bg-[#133D68] text-white p-8 sm:p-14">
+                {imageUrl && (
+                  <ResilientImage
+                    src={imageUrl}
+                    alt={heading || 'Section visual'}
+                    className="absolute inset-0 w-full h-full object-cover opacity-25"
+                  />
+                )}
+                <div className="relative max-w-3xl space-y-4">
+                  {heading && <h2 className="text-2xl sm:text-4xl font-bold tracking-tight">{heading}</h2>}
+                  {body && <p className="text-slate-200 text-base leading-relaxed whitespace-pre-line">{body}</p>}
+                  {ctaText && (
+                    <button
+                      type="button"
+                      onClick={() => navigate(ctaUrl)}
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-white text-[#133D68] text-sm font-bold rounded-md hover:bg-slate-100"
+                    >
+                      <span>{ctaText}</span>
+                      <ArrowIcon className="w-4 h-4" aria-hidden="true" />
+                    </button>
+                  )}
+                </div>
+              </section>
+            );
+
+          case 'image_text':
+            return (
+              <section key={sec.id} className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                {imageUrl && (
+                  <div className="lg:col-span-5 rounded-xl overflow-hidden border border-slate-200 aspect-[4/3] bg-slate-50">
+                    <ResilientImage src={imageUrl} alt={heading || 'Visual'} className="w-full h-full object-cover" />
+                  </div>
+                )}
+                <div className={`${imageUrl ? 'lg:col-span-7' : 'lg:col-span-12'} space-y-4`}>
+                  {heading && <h2 className="text-2xl font-bold text-[#133D68]">{heading}</h2>}
+                  {body && <p className="text-slate-600 leading-relaxed whitespace-pre-line">{body}</p>}
+                  {items.length > 0 && (
+                    <ul className="space-y-2 pt-2">
+                      {items.map((item) => (
+                        <li key={item} className="flex items-start gap-2 text-sm text-slate-700">
+                          <CheckCircle2 className="w-4 h-4 text-[#133D68] mt-0.5 shrink-0" aria-hidden="true" />
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {ctaText && (
+                    <button
+                      type="button"
+                      onClick={() => navigate(ctaUrl)}
+                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#133D68] text-white text-sm font-semibold rounded-md hover:bg-[#0C2B4B]"
+                    >
+                      <span>{ctaText}</span>
+                      <ArrowIcon className="w-4 h-4" aria-hidden="true" />
+                    </button>
+                  )}
+                </div>
+              </section>
+            );
+
+          case 'two_column': {
+            const half = Math.ceil(items.length / 2);
+            const leftItems = items.slice(0, half);
+            const rightItems = items.slice(half);
+            return (
+              <section key={sec.id} className="space-y-6">
+                {heading && <h2 className="text-2xl font-bold text-[#133D68]">{heading}</h2>}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="p-7 rounded-xl border border-slate-200 bg-[#F4F6F9] space-y-3">
+                    {body && <p className="text-slate-700 leading-relaxed whitespace-pre-line">{body}</p>}
+                    {leftItems.length > 0 && (
+                      <ul className="space-y-2">
+                        {leftItems.map((it) => (
+                          <li key={it} className="flex items-center gap-2 text-sm text-slate-800">
+                            <CheckCircle2 className="w-4 h-4 text-[#133D68] shrink-0" aria-hidden="true" />
+                            <span>{it}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                  <div className="p-7 rounded-xl border border-slate-200 bg-white space-y-4">
+                    {rightItems.length > 0 ? (
+                      <ul className="space-y-2">
+                        {rightItems.map((it) => (
+                          <li key={it} className="flex items-center gap-2 text-sm text-slate-800">
+                            <CheckCircle2 className="w-4 h-4 text-[#D93829] shrink-0" aria-hidden="true" />
+                            <span>{it}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : imageUrl ? (
+                      <ResilientImage src={imageUrl} alt={heading || 'Media'} className="w-full h-56 object-cover rounded-lg" />
+                    ) : null}
+                    {ctaText && (
+                      <button
+                        type="button"
+                        onClick={() => navigate(ctaUrl)}
+                        className="inline-flex items-center gap-2 text-sm font-bold text-[#133D68] hover:underline"
+                      >
+                        <span>{ctaText}</span>
+                        <ArrowIcon className="w-4 h-4" aria-hidden="true" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </section>
+            );
+          }
+
+          case 'gallery': {
+            const galleryUrls = [imageUrl, ...items.filter((x) => x.startsWith('http') || x.startsWith('/'))].filter(Boolean);
+            return (
+              <section key={sec.id} className="space-y-5">
+                {heading && <h2 className="text-2xl font-bold text-[#133D68]">{heading}</h2>}
+                {body && <p className="text-slate-600 max-w-3xl">{body}</p>}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {galleryUrls.map((url, idx) => (
+                    <div key={`${url}-${idx}`} className="aspect-[16/10] rounded-xl overflow-hidden border border-slate-200 bg-slate-100">
+                      <ResilientImage src={url} alt={`${heading || 'Gallery'} ${idx + 1}`} className="w-full h-full object-cover" />
+                    </div>
+                  ))}
+                </div>
+              </section>
+            );
+          }
+
+          case 'stats':
+            return (
+              <section key={sec.id} className="bg-[#133D68] text-white rounded-2xl p-8 sm:p-10 space-y-6">
+                {heading && <h2 className="text-2xl font-bold">{heading}</h2>}
+                {body && <p className="text-slate-200 max-w-2xl text-sm">{body}</p>}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {(items.length > 0 ? items : ['35+ Years Experience', '5 Strategic Sectors', '24-Month Warranty', 'Kingdom-Wide Reach']).map((item, idx) => {
+                    const [metric, label] = item.includes('|') ? item.split('|') : [item, ''];
+                    return (
+                      <div key={`${item}-${idx}`} className="p-5 rounded-xl bg-white/10 border border-white/15 space-y-1">
+                        <div className="text-2xl font-extrabold font-mono-tabular text-sky-300">
+                          {metric.trim()}
+                        </div>
+                        {label && <p className="text-xs text-slate-200">{label.trim()}</p>}
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            );
+
+          case 'testimonials': {
+            const dbTestimonials = bootstrap?.testimonials || [];
+            return (
+              <section key={sec.id} className="space-y-5">
+                {heading && <h2 className="text-2xl font-bold text-[#133D68]">{heading}</h2>}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {dbTestimonials.length > 0
+                    ? dbTestimonials.map((tm) => (
+                        <blockquote key={tm.id} className="p-6 rounded-xl border border-slate-200 bg-[#F4F6F9] space-y-3">
+                          <p className="text-slate-700 text-sm leading-relaxed">“{isAr ? tm.quoteAr : tm.quoteEn}”</p>
+                          <footer className="text-xs font-semibold text-[#133D68]">
+                            {tm.authorName} · {isAr ? tm.authorRoleAr : tm.authorRoleEn} ({tm.companyName})
+                          </footer>
+                        </blockquote>
+                      ))
+                    : items.map((quote, idx) => (
+                        <blockquote key={`${quote}-${idx}`} className="p-6 rounded-xl border border-slate-200 bg-[#F4F6F9] text-sm text-slate-700">
+                          “{quote}”
+                        </blockquote>
+                      ))}
+                </div>
+              </section>
+            );
+          }
+
+          case 'product_showcase': {
+            const prods = (bootstrap?.products || []).slice(0, 3);
+            return (
+              <section key={sec.id} className="space-y-6">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    {heading && <h2 className="text-2xl font-bold text-[#133D68]">{heading}</h2>}
+                    {body && <p className="text-sm text-slate-600 mt-1">{body}</p>}
+                  </div>
+                  <button type="button" onClick={() => navigate('/products')} className="text-sm font-semibold text-[#133D68] hover:underline">
+                    {isAr ? 'الكتالوج الكامل' : 'Full Catalog'}
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {prods.map((p) => (
+                    <article key={p.id} className="border border-slate-200 rounded-xl p-5 flex flex-col justify-between gap-4 bg-white">
+                      <div onClick={() => navigate(`/products/${p.slug}`)} className="cursor-pointer space-y-2">
+                        <div className="aspect-[16/10] bg-slate-100 rounded-lg overflow-hidden mb-3">
+                          <ResilientImage src={p.imageUrl} alt={p.translation?.name || p.sku} className="w-full h-full object-cover" />
+                        </div>
+                        <p className="text-xs font-mono-tabular text-slate-400">{p.sku}</p>
+                        <h3 className="font-bold text-slate-900">{p.translation?.name}</h3>
+                        <p className="text-sm text-slate-600 line-clamp-2">{p.translation?.summary}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPreselectedProduct(p.translation?.name || p.sku);
+                          navigate('/quote');
+                        }}
+                        className="self-start text-xs font-semibold text-[#133D68] hover:underline"
+                      >
+                        {isAr ? 'اطلب تسعير' : 'Request Quote'}
+                      </button>
+                    </article>
+                  ))}
+                </div>
+              </section>
+            );
+          }
+
+          case 'project_showcase': {
+            const prjs = (bootstrap?.projects || []).slice(0, 3);
+            return (
+              <section key={sec.id} className="space-y-6">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    {heading && <h2 className="text-2xl font-bold text-[#133D68]">{heading}</h2>}
+                    {body && <p className="text-sm text-slate-600 mt-1">{body}</p>}
+                  </div>
+                  <button type="button" onClick={() => navigate('/projects')} className="text-sm font-semibold text-[#133D68] hover:underline">
+                    {isAr ? 'جميع المشاريع' : 'All Projects'}
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {prjs.map((prj) => (
+                    <article
+                      key={prj.id}
+                      onClick={() => navigate(`/projects/${prj.slug}`)}
+                      className="cursor-pointer border border-slate-200 rounded-xl overflow-hidden hover:border-[#133D68] bg-white"
+                    >
+                      <div className="aspect-[16/10] bg-slate-100 overflow-hidden">
+                        <ResilientImage src={prj.imageUrl} alt={prj.translation?.title || prj.slug} className="w-full h-full object-cover" />
+                      </div>
+                      <div className="p-5 space-y-1.5">
+                        <p className="text-xs text-slate-500">{prj.category} · {isAr ? prj.locationAr : prj.locationEn}</p>
+                        <h3 className="font-bold text-slate-900">{prj.translation?.title}</h3>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </section>
+            );
+          }
+
+          case 'cta':
+          case 'contact':
+            return (
+              <section key={sec.id} className="bg-[#0E2E50] text-white rounded-2xl p-8 sm:p-10 flex flex-col md:flex-row items-center justify-between gap-6">
+                <div className="space-y-2 text-center md:text-start max-w-2xl">
+                  {heading && <h2 className="text-2xl font-bold">{heading}</h2>}
+                  {body && <p className="text-sm text-slate-200 leading-relaxed">{body}</p>}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => navigate(sec.sectionType === 'contact' ? '/contact' : ctaUrl)}
+                  className="px-6 py-3 bg-white text-[#133D68] font-bold text-sm rounded-md hover:bg-slate-100 whitespace-nowrap"
+                >
+                  {ctaText || (isAr ? 'تواصل معنا' : 'Contact Us')}
+                </button>
+              </section>
+            );
+
+          case 'features':
+          default:
+            return (
+              <section key={sec.id} className="space-y-6">
+                <div className="space-y-2 max-w-3xl">
+                  {heading && <h2 className="text-2xl font-bold text-[#133D68]">{heading}</h2>}
+                  {body && <p className="text-slate-600 leading-relaxed whitespace-pre-line">{body}</p>}
+                </div>
+                {items.length > 0 && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {items.map((item, idx) => (
+                      <div key={`${item}-${idx}`} className="p-5 rounded-xl border border-slate-200 bg-white space-y-2">
+                        <CheckCircle2 className="w-5 h-5 text-[#133D68]" aria-hidden="true" />
+                        <p className="font-semibold text-slate-900 text-sm">{item}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {ctaText && (
+                  <button
+                    type="button"
+                    onClick={() => navigate(ctaUrl)}
+                    className="inline-flex items-center gap-2 text-sm font-semibold text-[#133D68] hover:underline"
+                  >
+                    <span>{ctaText}</span>
+                    <ArrowIcon className="w-4 h-4" aria-hidden="true" />
+                  </button>
+                )}
+              </section>
+            );
+        }
+      })}
+    </div>
+  );
+};
+
+/* ---------------- DYNAMIC CMS CUSTOM PAGE (/p/:slug) ---------------- */
+export const DynamicCmsPage: React.FC<{ slug: string }> = ({ slug }) => {
+  const { locale, isRtl, navigate, bootstrap } = useApp();
+  const isAr = locale === 'ar';
+  const ArrowIcon = isRtl ? ArrowLeft : ArrowRight;
+
+  const pageData = bootstrap?.pages.find((p) => p.slug === slug);
+  if (!pageData) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-24 text-center space-y-4">
+        <h1 className="text-3xl font-bold text-[#133D68]">404</h1>
+        <p className="text-slate-600">
+          {isAr ? 'الصفحة المطلوبة غير موجودة.' : 'The requested page could not be found.'}
+        </p>
+        <button
+          type="button"
+          onClick={() => navigate('/')}
+          className="px-5 py-2.5 bg-[#133D68] text-white text-sm font-semibold rounded-md"
+        >
+          {isAr ? 'العودة للرئيسية' : 'Return Home'}
+        </button>
+      </div>
+    );
+  }
+
+  const tr = pageData.translation;
+
+  return (
+    <div className="bg-white">
+      <section className="relative bg-[#133D68] text-white py-16 overflow-hidden">
+        {pageData.heroImageUrl && (
+          <ResilientImage
+            src={pageData.heroImageUrl}
+            alt={tr?.title || pageData.slug}
+            lazy={false}
+            className="absolute inset-0 w-full h-full object-cover opacity-25"
+          />
+        )}
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-3">
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
+            {tr?.heroHeading || tr?.title || pageData.slug}
+          </h1>
+          {tr?.heroSubheading && (
+            <p className="text-slate-200 max-w-3xl text-base leading-relaxed">
+              {tr.heroSubheading}
+            </p>
+          )}
+          {tr?.heroCtaText && (
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => navigate(tr.heroCtaUrl || '/contact')}
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-[#133D68] text-sm font-bold rounded-md hover:bg-slate-100"
+              >
+                <span>{tr.heroCtaText}</span>
+                <ArrowIcon className="w-4 h-4" aria-hidden="true" />
+              </button>
+            </div>
+          )}
+        </div>
+      </section>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 space-y-12">
+        {tr?.bodyContent && (
+          <div className="prose max-w-4xl text-slate-700 leading-relaxed whitespace-pre-line text-base">
+            {tr.bodyContent}
+          </div>
+        )}
+        <SectionBlockRenderer sections={pageData.sections} />
+      </div>
+    </div>
+  );
+};
 
 /* ---------------- ABOUT US PAGE ---------------- */
 export const AboutPage: React.FC = () => {
@@ -126,6 +534,8 @@ export const AboutPage: React.FC = () => {
             </button>
           </div>
         </section>
+
+        <SectionBlockRenderer sections={aboutPage?.sections} />
       </div>
     </div>
   );
@@ -212,8 +622,19 @@ export const DivisionPage: React.FC<{ division: SectorKey | 'pumps' }> = ({ divi
 
   const sectorMeta = getSectorByKey(division) || GROUP_SECTORS[0];
   const localizedMeta = isAr ? sectorMeta.ar : sectorMeta.en;
+  const dbSector = bootstrap?.sectors?.find((s) => s.slug === sectorMeta.key);
   const pageData = bootstrap?.pages.find((p) => p.slug === sectorMeta.pageSlug);
   const tr = pageData?.translation;
+
+  const sectorTitle = dbSector?.translation?.title || tr?.heroHeading || localizedMeta.title;
+  const sectorTagline = dbSector?.translation?.tagline || tr?.introBannerText || localizedMeta.subtitle;
+  const sectorSummary = dbSector?.translation?.summary || tr?.heroSubheading || localizedMeta.summary;
+  const sectorDescription = dbSector?.translation?.description || tr?.bodyContent || localizedMeta.summary;
+  const sectorImageUrl = dbSector?.imageUrl || pageData?.heroImageUrl || sectorMeta.imageUrl;
+  const sectorHighlights =
+    (dbSector?.translation?.highlightsJson && dbSector.translation.highlightsJson.length > 0
+      ? dbSector.translation.highlightsJson
+      : localizedMeta.highlights);
 
   const relatedProducts =
     sectorMeta.key === 'solar-energy'
@@ -235,8 +656,8 @@ export const DivisionPage: React.FC<{ division: SectorKey | 'pumps' }> = ({ divi
     <div className="bg-white">
       <section className="relative bg-[#091D36] text-white py-20 overflow-hidden">
         <ResilientImage
-          src={pageData?.heroImageUrl || sectorMeta.imageUrl}
-          alt={tr?.heroHeading || localizedMeta.title}
+          src={sectorImageUrl}
+          alt={sectorTitle}
           lazy={false}
           className="absolute inset-0 w-full h-full object-cover opacity-30"
         />
@@ -253,10 +674,10 @@ export const DivisionPage: React.FC<{ division: SectorKey | 'pumps' }> = ({ divi
             </span>
           </div>
           <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
-            {tr?.heroHeading || localizedMeta.title}
+            {sectorTitle}
           </h1>
           <p className="text-slate-200 max-w-2xl text-base leading-relaxed">
-            {tr?.heroSubheading || localizedMeta.summary}
+            {sectorSummary}
           </p>
           <div className="pt-2 flex flex-wrap gap-3">
             <button
@@ -285,14 +706,14 @@ export const DivisionPage: React.FC<{ division: SectorKey | 'pumps' }> = ({ divi
               <h2 className="text-2xl font-bold text-[#133D68]">
                 {isAr ? 'نطاق العمل والقدرات' : 'Sector Capabilities & Scope'}
               </h2>
-              <p className="text-slate-700 leading-relaxed text-base">
-                {tr?.bodyContent || localizedMeta.summary}
+              <p className="text-slate-700 leading-relaxed text-base whitespace-pre-line">
+                {sectorDescription}
               </p>
             </div>
 
-            {tr?.introBannerText && (
+            {sectorTagline && (
               <div className="p-5 bg-[#F4F6F9] border border-slate-200 rounded-lg text-sm text-slate-700 leading-relaxed">
-                {tr.introBannerText}
+                {sectorTagline}
               </div>
             )}
 
@@ -301,7 +722,7 @@ export const DivisionPage: React.FC<{ division: SectorKey | 'pumps' }> = ({ divi
                 {isAr ? 'مجالات التركيز الرئيسية' : 'Key Sector Pillars'}
               </h3>
               <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {localizedMeta.highlights.map((item) => (
+                {sectorHighlights.map((item) => (
                   <li
                     key={item}
                     className="flex items-start gap-2.5 p-4 rounded-lg border border-slate-200 bg-white text-sm text-slate-800"
@@ -321,12 +742,13 @@ export const DivisionPage: React.FC<{ division: SectorKey | 'pumps' }> = ({ divi
             </div>
             <div className="divide-y divide-slate-100">
               {GROUP_SECTORS.map((s) => {
+                const dbItem = bootstrap?.sectors?.find((ds) => ds.slug === s.key);
                 const isCurrent = sectorMeta.key === s.key;
                 return (
                   <button
                     key={s.key}
                     type="button"
-                    onClick={() => navigate(s.route)}
+                    onClick={() => navigate(dbItem?.routePath || s.route)}
                     className={`w-full text-start py-3 text-sm font-medium flex items-center justify-between gap-2 transition-colors ${
                       isCurrent
                         ? 'text-[#133D68] font-bold'
@@ -335,7 +757,7 @@ export const DivisionPage: React.FC<{ division: SectorKey | 'pumps' }> = ({ divi
                   >
                     <span className="flex items-center gap-2.5">
                       <span className="text-xs font-mono-tabular text-slate-400">{s.zoneCode}</span>
-                      <span>{isAr ? s.ar.title : s.en.title}</span>
+                      <span>{dbItem?.translation?.title || (isAr ? s.ar.title : s.en.title)}</span>
                     </span>
                     <ArrowIcon className="w-4 h-4 shrink-0" aria-hidden="true" />
                   </button>
@@ -344,6 +766,8 @@ export const DivisionPage: React.FC<{ division: SectorKey | 'pumps' }> = ({ divi
             </div>
           </div>
         </div>
+
+        <SectionBlockRenderer sections={pageData?.sections} />
 
         {(sectorMeta.key === 'industrial-engineering' || sectorMeta.key === 'solar-energy') &&
           fallbackProducts.length > 0 && (
@@ -491,11 +915,33 @@ export const ProjectsPage: React.FC<{ slug?: string }> = ({ slug }) => {
               <p className="text-slate-700 text-sm leading-relaxed">
                 {project.translation?.outcomeNotes}
               </p>
-              <div className="pt-3 border-t border-slate-200 text-xs text-slate-500">
-                {isAr ? 'القطاع:' : 'Division:'} {project.division} · {project.completionYear}
+              <div className="pt-3 border-t border-slate-200 text-xs text-slate-500 space-y-1">
+                <div>
+                  {isAr ? 'القطاع:' : 'Division:'} {project.division} · {project.completionYear}
+                </div>
+                {project.clientName && (
+                  <div>
+                    {isAr ? 'العميل:' : 'Client:'} <span className="font-semibold text-slate-700">{project.clientName}</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
+
+          {Array.isArray(project.galleryImagesJson) && project.galleryImagesJson.length > 0 && (
+            <div className="space-y-4 pt-4">
+              <h2 className="text-lg font-bold text-[#133D68]">
+                {isAr ? 'معرض صور المشروع' : 'Project Gallery'}
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {project.galleryImagesJson.map((imgUrl, idx) => (
+                  <div key={`${imgUrl}-${idx}`} className="aspect-[16/10] rounded-xl overflow-hidden border border-slate-200">
+                    <ResilientImage src={imgUrl} alt={`${project.translation?.title || project.slug} ${idx + 1}`} className="w-full h-full object-cover" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );

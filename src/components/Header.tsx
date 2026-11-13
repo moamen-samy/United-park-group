@@ -58,16 +58,24 @@ export const Header: React.FC = () => {
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4 lg:gap-8">
-        {/* Zone 1: Clean single-line PARK brand wordmark */}
+        {/* Zone 1: Clean single-line PARK brand wordmark or CMS custom logo */}
         <button
           type="button"
           onClick={() => handleNav('/')}
-          className={`text-left focus-visible:outline-2 focus-visible:outline-offset-4 rounded ${
+          className={`text-left focus-visible:outline-2 focus-visible:outline-offset-4 rounded flex items-center gap-2 ${
             isHeroDark ? 'focus-visible:outline-white' : 'focus-visible:outline-[#133D68]'
           }`}
           aria-label="United Park Group Home"
         >
-          <ParkLogo variant={isHeroDark ? 'light' : 'dark'} compact />
+          {bootstrap?.settings?.logoUrl ? (
+            <img
+              src={bootstrap.settings.logoUrl}
+              alt={isAr ? bootstrap.settings.companyNameAr : bootstrap.settings.companyNameEn}
+              className="h-9 max-w-[160px] object-contain"
+            />
+          ) : (
+            <ParkLogo variant={isHeroDark ? 'light' : 'dark'} compact />
+          )}
         </button>
 
         {/* Zone 2: Desktop 5-link single-line navigation */}
@@ -110,19 +118,24 @@ export const Header: React.FC = () => {
                   <div className="px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
                     {isAr ? 'قطاعات الأعمال الخمسة' : 'Five Group Sectors'}
                   </div>
-                  {GROUP_SECTORS.map((sec) => (
-                    <button
-                      key={sec.key}
-                      type="button"
-                      onClick={() => handleNav(sec.route)}
-                      className="w-full text-start px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 hover:text-[#133D68] flex items-center justify-between gap-2"
-                    >
-                      <span>{isAr ? sec.ar.title : sec.en.title}</span>
-                      <span className="text-[10px] font-mono-tabular text-slate-400">
-                        {sec.zoneCode}
-                      </span>
-                    </button>
-                  ))}
+                  {GROUP_SECTORS.map((sec) => {
+                    const dbSec = bootstrap?.sectors?.find((s) => s.slug === sec.key);
+                    return (
+                      <button
+                        key={sec.key}
+                        type="button"
+                        onClick={() => handleNav(dbSec?.routePath || sec.route)}
+                        className="w-full text-start px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 hover:text-[#133D68] flex items-center justify-between gap-2"
+                      >
+                        <span>
+                          {dbSec?.translation?.title || (isAr ? sec.ar.title : sec.en.title)}
+                        </span>
+                        <span className="text-[10px] font-mono-tabular text-slate-400">
+                          {sec.zoneCode}
+                        </span>
+                      </button>
+                    );
+                  })}
                   <div className="my-1.5 border-t border-slate-100" />
                   <button
                     type="button"
@@ -261,16 +274,19 @@ export const Header: React.FC = () => {
                 </button>
                 {sectorsExpanded && (
                   <div className="bg-slate-50 px-6 py-2 space-y-1 border-t border-slate-100">
-                    {GROUP_SECTORS.map((sec) => (
-                      <button
-                        key={sec.key}
-                        type="button"
-                        onClick={() => handleNav(sec.route)}
-                        className="block w-full text-start py-2 text-sm text-slate-700"
-                      >
-                        {isAr ? sec.ar.title : sec.en.title}
-                      </button>
-                    ))}
+                    {GROUP_SECTORS.map((sec) => {
+                      const dbSec = bootstrap?.sectors?.find((s) => s.slug === sec.key);
+                      return (
+                        <button
+                          key={sec.key}
+                          type="button"
+                          onClick={() => handleNav(dbSec?.routePath || sec.route)}
+                          className="block w-full text-start py-2 text-sm text-slate-700"
+                        >
+                          {dbSec?.translation?.title || (isAr ? sec.ar.title : sec.en.title)}
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
               </div>

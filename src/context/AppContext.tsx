@@ -1,5 +1,12 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { onAuthStateChanged, signInWithPopup, signOut as fbSignOut, User } from 'firebase/auth';
+import {
+  onAuthStateChanged,
+  sendPasswordResetEmail,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  signOut as fbSignOut,
+  User,
+} from 'firebase/auth';
 import { auth, googleAuthProvider } from '../lib/firebase';
 import { DbUser, Locale, PublicBootstrapData } from '../types/cms';
 
@@ -20,6 +27,8 @@ interface AppContextValue {
   authLoading: boolean;
   authError: string | null;
   signInWithGoogle: () => Promise<void>;
+  signInWithEmail: (email: string, password: string) => Promise<void>;
+  sendPasswordReset: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
   preselectedProduct: string;
   setPreselectedProduct: (val: string) => void;
@@ -200,6 +209,32 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, []);
 
+  const signInWithEmail = useCallback(async (email: string, password: string) => {
+    setAuthError(null);
+    setAuthLoading(true);
+    try {
+      const cred = await signInWithEmailAndPassword(auth, email, password);
+      const token = await cred.user.getIdToken();
+      setAuthToken(token);
+      const meRes = await fetch('/api/admin/me', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (meRes.ok) {
+        const payload = await meRes.json();
+        setDbUser(payload.user || null);
+      }
+    } catch (err) {
+      setAuthError(err instanceof Error ? err.message : 'Email sign-in failed.');
+    } finally {
+      setAuthLoading(false);
+    }
+  }, []);
+
+  const sendPasswordReset = useCallback(async (email: string) => {
+    setAuthError(null);
+    await sendPasswordResetEmail(auth, email);
+  }, []);
+
   const signOut = useCallback(async () => {
     await fbSignOut(auth);
     setFirebaseUser(null);
@@ -207,7 +242,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setDbUser(null);
   }, []);
 
-  // Dynamic Document Title, Meta, Canonical, hreflang & JSON-LD
+  // Enforce DB Redirects on navigation
+  useEffect(() => {
+    if (!bootstrap?.redirects?.length) return;
+    if (currentPath.startsWith('/admin')) return;
+    const matchedRedirect = bootstrap.redirects.find(
+      (r) => r.isActive && r.fromPath === currentPath
+    );
+    if (matchedRedirect && matchedRedirect.toPath && matchedRedirect.toPath !== currentPath) {
+      fetch(`/api/public/redirects/${matchedRedirect.id}/hit`, { method: 'POST' }).catch(() => {});
+      navigate(matchedRedirect.toPath);
+    }
+  }, [bootstrap, currentPath, navigate]);
+
+  // Dynamic Document Title, Meta, Canonical, hreflang, Robots & JSON-LD
   useEffect(() => {
     if (!bootstrap) return;
     const routeKey =
@@ -248,8 +296,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     setMeta('meta[name="description"]', 'content', desc);
+    setMeta('meta[name="robots"]', 'content', matchedSeo?.noIndex ? 'noindex, nofollow' : 'index, follow');
     setMeta('meta[property="og:title"]', 'content', matchedSeo?.ogTitle || title);
     setMeta('meta[property="og:description"]', 'content', matchedSeo?.ogDescription || desc);
+    setMeta('meta[property="og:type"]', 'content', matchedSeo?.ogType || 'website');
+    if (matchedSeo?.ogImageUrl) {
+      setMeta('meta[property="og:image"]', 'content', matchedSeo.ogImageUrl);
+    }
     setMeta('meta[name="twitter:title"]', 'content', title);
     setMeta('meta[name="twitter:description"]', 'content', desc);
 
@@ -330,6 +383,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     ldScript.textContent = JSON.stringify([orgSchema, breadcrumbSchema]);
   }, [bootstrap, currentPath, locale]);
 
+  // Optional Google Analytics integration driven by CMS Website Settings
+  useEffect(() => {
+    const gaId = bootstrap?.settings?.analyticsMeasurementId?.trim();
+    if (!gaId || !/^(G|AW|UA)-[A-Z0-9-]+$/i.test(gaId)) return;
+    if (document.getElementById('park-gtag-js')) return;
+
+    const script = document.createElement('script');
+    script.id = 'park-gtag-js';
+    script.async = true;
+    script.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(gaId)}`;
+    document.head.appendChild(script);
+
+    const inline = document.createElement('script');
+    inline.id = 'park-gtag-init';
+    inline.textContent = `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config',${JSON.stringify(gaId)});`;
+    document.head.appendChild(inline);
+  }, [bootstrap?.settings?.analyticsMeasurementId]);
+
   return (
     <AppContext.Provider
       value={{
@@ -349,6 +420,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         authLoading,
         authError,
         signInWithGoogle,
+        signInWithEmail,
+        sendPasswordReset,
         signOut,
         preselectedProduct,
         setPreselectedProduct,

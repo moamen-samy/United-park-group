@@ -22,42 +22,68 @@ export interface AuthRequest extends Request {
   dbUser?: AuthUserRecord;
 }
 
-async function ensureDefaultRoles() {
-  const existing = await db.select().from(adminRoles);
-  if (existing.length > 0) return existing;
+const ENTERPRISE_DEFAULT_ROLES = [
+  {
+    slug: 'super_admin',
+    name: 'Super Administrator',
+    description: 'Full administrative access across CMS, pricing, users, backups, and security logs.',
+    permissions: ['*'],
+  },
+  {
+    slug: 'admin',
+    name: 'Administrator',
+    description: 'Full operational management across pages, catalog, sectors, leads, SEO, and settings.',
+    permissions: [
+      'content:read',
+      'content:write',
+      'catalog:read',
+      'catalog:write',
+      'pricing:write',
+      'media:write',
+      'seo:write',
+      'leads:read',
+      'leads:write',
+      'logs:read',
+      'settings:manage',
+    ],
+  },
+  {
+    slug: 'content_editor',
+    name: 'Content Editor',
+    description: 'Manage pages, sections, sectors, news articles, banners, media, and navigation.',
+    permissions: ['content:read', 'content:write', 'media:write'],
+  },
+  {
+    slug: 'product_manager',
+    name: 'Product & Pricing Manager',
+    description: 'Manage products, categories, technical specs, SAR/multi-currency pricing, and partners.',
+    permissions: ['catalog:read', 'catalog:write', 'pricing:write', 'media:write'],
+  },
+  {
+    slug: 'marketing_manager',
+    name: 'Marketing & SEO Manager',
+    description: 'Manage SEO metadata, sitemaps, redirects, banners, news articles, and customer leads.',
+    permissions: ['content:read', 'seo:write', 'leads:read', 'leads:write', 'media:write'],
+  },
+  {
+    slug: 'viewer',
+    name: 'Viewer',
+    description: 'Read-only access awaiting administrator role assignment.',
+    permissions: ['profile:read', 'content:read', 'catalog:read', 'leads:read'],
+  },
+];
 
-  const inserted = await db
-    .insert(adminRoles)
-    .values([
-      {
-        slug: 'super_admin',
-        name: 'Super Administrator',
-        description: 'Full administrative access across CMS, catalog, leads, users, and SEO.',
-        permissions: ['*'],
-      },
-      {
-        slug: 'editor',
-        name: 'Content & Catalog Editor',
-        description: 'Manage pages, bilingual copy, products, partners, projects, news, and SEO.',
-        permissions: ['content:write', 'catalog:write', 'media:write', 'seo:write'],
-      },
-      {
-        slug: 'sales_manager',
-        name: 'Sales & RFQ Manager',
-        description: 'View and manage incoming quotation requests and contact messages.',
-        permissions: ['leads:read', 'leads:write'],
-      },
-      {
-        slug: 'viewer',
-        name: 'Authenticated Viewer',
-        description: 'Read-only authenticated account pending administrator role assignment.',
-        permissions: ['profile:read'],
-      },
-    ])
-    .onConflictDoNothing()
-    .returning();
+let rolesSynced = false;
 
-  return inserted.length > 0 ? inserted : await db.select().from(adminRoles);
+export async function ensureDefaultRoles() {
+  if (!rolesSynced) {
+    await db
+      .insert(adminRoles)
+      .values(ENTERPRISE_DEFAULT_ROLES)
+      .onConflictDoNothing();
+    rolesSynced = true;
+  }
+  return await db.select().from(adminRoles);
 }
 
 export async function getOrCreateDbUser(decoded: DecodedIdToken): Promise<AuthUserRecord> {
@@ -135,7 +161,7 @@ export async function getOrCreateDbUser(decoded: DecodedIdToken): Promise<AuthUs
     photoUrl: row.photoUrl,
     isActive: row.isActive,
     roleSlug: row.roleSlug || 'viewer',
-    roleName: row.roleName || 'Authenticated Viewer',
+    roleName: row.roleName || 'Viewer',
     permissions: Array.isArray(row.permissions) ? row.permissions : [],
   };
 }
@@ -165,17 +191,20 @@ export const requireAuth = async (
   }
 };
 
+export function userHasAnyPermission(dbUser: AuthUserRecord, requiredPermissions: string[]): boolean {
+  if (dbUser.roleSlug === 'super_admin' || dbUser.permissions.includes('*')) {
+    return true;
+  }
+  return requiredPermissions.some((perm) => dbUser.permissions.includes(perm));
+}
+
 export const requirePermission = (requiredPermissions: string[]) => {
   return (req: AuthRequest, res: Response, next: NextFunction) => {
     const dbUser = req.dbUser;
     if (!dbUser) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
-    if (dbUser.roleSlug === 'super_admin' || dbUser.permissions.includes('*')) {
-      return next();
-    }
-    const allowed = requiredPermissions.some((perm) => dbUser.permissions.includes(perm));
-    if (!allowed) {
+    if (!userHasAnyPermission(dbUser, requiredPermissions)) {
       return res.status(403).json({
         error: 'Forbidden: Your account does not have permission for this administrative action.',
       });

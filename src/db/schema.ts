@@ -58,6 +58,18 @@ export const websiteSettings = pgTable('website_settings', {
   mapEmbedUrl: text('map_embed_url').default(''),
   copyrightEn: text('copyright_en').notNull(),
   copyrightAr: text('copyright_ar').notNull(),
+  defaultCurrency: text('default_currency').notNull().default('SAR'),
+  supportedCurrenciesJson: jsonb('supported_currencies_json')
+    .$type<string[]>()
+    .notNull()
+    .default(['SAR', 'USD', 'AED', 'EUR']),
+  defaultTaxRate: text('default_tax_rate').notNull().default('15'),
+  analyticsMeasurementId: text('analytics_measurement_id').default(''),
+  robotsTxt: text('robots_txt').default(
+    'User-agent: *\nAllow: /\nDisallow: /admin\nSitemap: /sitemap.xml'
+  ),
+  footerAboutEn: text('footer_about_en').default(''),
+  footerAboutAr: text('footer_about_ar').default(''),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
@@ -67,7 +79,10 @@ export const pages = pgTable('pages', {
   slug: text('slug').notNull().unique(),
   template: text('template').notNull().default('standard'),
   heroImageUrl: text('hero_image_url').default(''),
+  status: text('status').notNull().default('published'),
+  isVisible: boolean('is_visible').notNull().default(true),
   isPublished: boolean('is_published').notNull().default(true),
+  scheduledAt: timestamp('scheduled_at'),
   sortOrder: integer('sort_order').notNull().default(0),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
@@ -94,6 +109,59 @@ export const pageTranslations = pgTable(
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
   (table) => [uniqueIndex('page_translations_page_locale_idx').on(table.pageId, table.locale)]
+);
+
+// 5b. page_sections (Reusable Section Builder)
+export const pageSections = pgTable(
+  'page_sections',
+  {
+    id: serial('id').primaryKey(),
+    pageId: integer('page_id')
+      .references(() => pages.id, { onDelete: 'cascade' })
+      .notNull(),
+    sectionType: text('section_type').notNull().default('image_text'),
+    sortOrder: integer('sort_order').notNull().default(0),
+    isVisible: boolean('is_visible').notNull().default(true),
+    contentEnJson: jsonb('content_en_json').$type<Record<string, unknown>>().notNull().default({}),
+    contentArJson: jsonb('content_ar_json').$type<Record<string, unknown>>().notNull().default({}),
+    settingsJson: jsonb('settings_json').$type<Record<string, unknown>>().notNull().default({}),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => [index('page_sections_page_idx').on(table.pageId)]
+);
+
+// 5c. sectors & sector_translations (Business Sectors Module)
+export const sectors = pgTable('sectors', {
+  id: serial('id').primaryKey(),
+  slug: text('slug').notNull().unique(),
+  routePath: text('route_path').notNull(),
+  iconName: text('icon_name').notNull().default('Droplets'),
+  imageUrl: text('image_url').default(''),
+  accentColor: text('accent_color').notNull().default('#133D68'),
+  sortOrder: integer('sort_order').notNull().default(0),
+  isFeatured: boolean('is_featured').notNull().default(true),
+  isPublished: boolean('is_published').notNull().default(true),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const sectorTranslations = pgTable(
+  'sector_translations',
+  {
+    id: serial('id').primaryKey(),
+    sectorId: integer('sector_id')
+      .references(() => sectors.id, { onDelete: 'cascade' })
+      .notNull(),
+    locale: text('locale').notNull(),
+    title: text('title').notNull(),
+    shortTitle: text('short_title').notNull(),
+    tagline: text('tagline').default(''),
+    summary: text('summary').notNull(),
+    description: text('description').default(''),
+    highlightsJson: jsonb('highlights_json').$type<string[]>().default([]),
+  },
+  (table) => [uniqueIndex('sector_translations_sector_locale_idx').on(table.sectorId, table.locale)]
 );
 
 // 6. navigation_menus
@@ -213,8 +281,22 @@ export const products = pgTable(
     partnerId: integer('partner_id')
       .references(() => partners.id, { onDelete: 'set null' }),
     imageUrl: text('image_url').default(''),
+    galleryImagesJson: jsonb('gallery_images_json').$type<string[]>().notNull().default([]),
     datasheetUrl: text('datasheet_url').default(''),
     division: text('division').notNull().default('pumps'),
+    brand: text('brand').default(''),
+    modelNumber: text('model_number').default(''),
+    stockStatus: text('stock_status').notNull().default('in_stock'),
+    regularPrice: text('regular_price').default('0'),
+    discountPrice: text('discount_price').default(''),
+    currency: text('currency').notNull().default('SAR'),
+    taxRate: text('tax_rate').notNull().default('15'),
+    showPrice: boolean('show_price').notNull().default(false),
+    status: text('status').notNull().default('published'),
+    seoTitleEn: text('seo_title_en').default(''),
+    seoTitleAr: text('seo_title_ar').default(''),
+    seoDescEn: text('seo_desc_en').default(''),
+    seoDescAr: text('seo_desc_ar').default(''),
     isFeatured: boolean('is_featured').notNull().default(false),
     isPublished: boolean('is_published').notNull().default(true),
     sortOrder: integer('sort_order').notNull().default(0),
@@ -243,8 +325,32 @@ export const productTranslations = pgTable(
       .$type<Array<{ label: string; value: string; unit?: string }>>()
       .default([]),
     applicationsJson: jsonb('applications_json').$type<string[]>().default([]),
+    featuresJson: jsonb('features_json').$type<string[]>().default([]),
   },
   (table) => [uniqueIndex('product_translations_product_locale_idx').on(table.productId, table.locale)]
+);
+
+// 14b. product_price_history
+export const productPriceHistory = pgTable(
+  'product_price_history',
+  {
+    id: serial('id').primaryKey(),
+    productId: integer('product_id')
+      .references(() => products.id, { onDelete: 'cascade' })
+      .notNull(),
+    previousPrice: text('previous_price').default('0'),
+    newPrice: text('new_price').notNull(),
+    discountPrice: text('discount_price').default(''),
+    currency: text('currency').notNull().default('SAR'),
+    showPrice: boolean('show_price').notNull().default(false),
+    changedByUserId: integer('changed_by_user_id').references(() => users.id, {
+      onDelete: 'set null',
+    }),
+    changedByEmail: text('changed_by_email').default('system'),
+    note: text('note').default(''),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => [index('product_price_history_product_idx').on(table.productId)]
 );
 
 // 15. clients
@@ -266,13 +372,20 @@ export const projects = pgTable('projects', {
   id: serial('id').primaryKey(),
   slug: text('slug').notNull().unique(),
   clientId: integer('client_id').references(() => clients.id, { onDelete: 'set null' }),
+  clientName: text('client_name').default(''),
   category: text('category').notNull().default('Water Infrastructure'),
   division: text('division').notNull().default('contracting'),
+  status: text('status').notNull().default('completed'),
   locationEn: text('location_en').default('Jeddah, Saudi Arabia'),
   locationAr: text('location_ar').default('جدة، المملكة العربية السعودية'),
   completionYear: text('completion_year').default(''),
   imageUrl: text('image_url').default(''),
+  galleryImagesJson: jsonb('gallery_images_json').$type<string[]>().notNull().default([]),
   videoUrl: text('video_url').default(''),
+  seoTitleEn: text('seo_title_en').default(''),
+  seoTitleAr: text('seo_title_ar').default(''),
+  seoDescEn: text('seo_desc_en').default(''),
+  seoDescAr: text('seo_desc_ar').default(''),
   isFeatured: boolean('is_featured').notNull().default(true),
   isPublished: boolean('is_published').notNull().default(true),
   isPlaceholder: boolean('is_placeholder').notNull().default(false),
@@ -311,19 +424,70 @@ export const testimonials = pgTable('testimonials', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
-// 19. media_assets
+// 19. media_folders & media_assets
+export const mediaFolders = pgTable('media_folders', {
+  id: serial('id').primaryKey(),
+  name: text('name').notNull(),
+  slug: text('slug').notNull().unique(),
+  description: text('description').default(''),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
 export const mediaAssets = pgTable('media_assets', {
   id: serial('id').primaryKey(),
   filename: text('filename').notNull(),
   mimeType: text('mime_type').notNull(),
   sizeBytes: integer('size_bytes').notNull().default(0),
+  width: integer('width').default(0),
+  height: integer('height').default(0),
   url: text('url').notNull(),
   dataBase64: text('data_base64').default(''),
+  storageProvider: text('storage_provider').notNull().default('postgresql'),
+  storagePath: text('storage_path').default(''),
+  titleEn: text('title_en').default(''),
+  titleAr: text('title_ar').default(''),
   altEn: text('alt_en').default(''),
   altAr: text('alt_ar').default(''),
+  descriptionEn: text('description_en').default(''),
+  descriptionAr: text('description_ar').default(''),
   folder: text('folder').notNull().default('general'),
   uploadedByUserId: integer('uploaded_by_user_id').references(() => users.id, { onDelete: 'set null' }),
   createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// 19b. banners & homepage_sections
+export const banners = pgTable('banners', {
+  id: serial('id').primaryKey(),
+  placement: text('placement').notNull().default('hero'),
+  titleEn: text('title_en').notNull(),
+  titleAr: text('title_ar').notNull(),
+  subtitleEn: text('subtitle_en').default(''),
+  subtitleAr: text('subtitle_ar').default(''),
+  ctaTextEn: text('cta_text_en').default(''),
+  ctaTextAr: text('cta_text_ar').default(''),
+  ctaUrl: text('cta_url').default('/quote'),
+  imageUrl: text('image_url').default(''),
+  mobileImageUrl: text('mobile_image_url').default(''),
+  sortOrder: integer('sort_order').notNull().default(0),
+  isPublished: boolean('is_published').notNull().default(true),
+  startsAt: timestamp('starts_at'),
+  endsAt: timestamp('ends_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const homepageSections = pgTable('homepage_sections', {
+  id: serial('id').primaryKey(),
+  sectionKey: text('section_key').notNull().unique(),
+  sectionType: text('section_type').notNull(),
+  titleEn: text('title_en').notNull(),
+  titleAr: text('title_ar').notNull(),
+  subtitleEn: text('subtitle_en').default(''),
+  subtitleAr: text('subtitle_ar').default(''),
+  sortOrder: integer('sort_order').notNull().default(0),
+  isVisible: boolean('is_visible').notNull().default(true),
+  configJson: jsonb('config_json').$type<Record<string, unknown>>().notNull().default({}),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
 // 20. contact_messages
@@ -340,6 +504,9 @@ export const contactMessages = pgTable(
     locale: text('locale').notNull().default('en'),
     status: text('status').notNull().default('new'),
     adminNotes: text('admin_notes').default(''),
+    assignedToUserId: integer('assigned_to_user_id').references(() => users.id, {
+      onDelete: 'set null',
+    }),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
@@ -367,6 +534,9 @@ export const quoteRequests = pgTable(
     locale: text('locale').notNull().default('en'),
     status: text('status').notNull().default('new'),
     adminNotes: text('admin_notes').default(''),
+    assignedToUserId: integer('assigned_to_user_id').references(() => users.id, {
+      onDelete: 'set null',
+    }),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
@@ -384,7 +554,7 @@ export const socialLinks = pgTable('social_links', {
   isVisible: boolean('is_visible').notNull().default(true),
 });
 
-// 23. seo_metadata
+// 23. seo_metadata & redirects
 export const seoMetadata = pgTable(
   'seo_metadata',
   {
@@ -397,12 +567,25 @@ export const seoMetadata = pgTable(
     ogTitle: text('og_title').default(''),
     ogDescription: text('og_description').default(''),
     ogImageUrl: text('og_image_url').default(''),
+    ogType: text('og_type').default('website'),
     schemaType: text('schema_type').default('WebPage'),
     keywords: text('keywords').default(''),
+    noIndex: boolean('no_index').notNull().default(false),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
   (table) => [uniqueIndex('seo_metadata_route_locale_idx').on(table.routeKey, table.locale)]
 );
+
+export const redirects = pgTable('redirects', {
+  id: serial('id').primaryKey(),
+  fromPath: text('from_path').notNull().unique(),
+  toPath: text('to_path').notNull(),
+  statusCode: integer('status_code').notNull().default(301),
+  isActive: boolean('is_active').notNull().default(true),
+  hits: integer('hits').notNull().default(0),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
 
 // 24. blog_posts
 export const blogPosts = pgTable('blog_posts', {
@@ -410,6 +593,7 @@ export const blogPosts = pgTable('blog_posts', {
   slug: text('slug').notNull().unique(),
   categoryEn: text('category_en').notNull().default('Industry Insights'),
   categoryAr: text('category_ar').notNull().default('رؤى صناعية'),
+  tagsJson: jsonb('tags_json').$type<string[]>().notNull().default([]),
   coverImageUrl: text('cover_image_url').default(''),
   authorName: text('author_name').default('United Park Editorial Team'),
   readTimeMinutes: integer('read_time_minutes').notNull().default(4),
@@ -422,6 +606,10 @@ export const blogPosts = pgTable('blog_posts', {
   excerptAr: text('excerpt_ar').notNull(),
   contentEn: text('content_en').notNull(),
   contentAr: text('content_ar').notNull(),
+  seoTitleEn: text('seo_title_en').default(''),
+  seoTitleAr: text('seo_title_ar').default(''),
+  seoDescEn: text('seo_desc_en').default(''),
+  seoDescAr: text('seo_desc_ar').default(''),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -443,6 +631,24 @@ export const activityLogs = pgTable(
   (table) => [index('activity_logs_created_idx').on(table.createdAt)]
 );
 
+// 26. system_backups
+export const systemBackups = pgTable('system_backups', {
+  id: serial('id').primaryKey(),
+  backupType: text('backup_type').notNull().default('logical_json'),
+  fileName: text('file_name').notNull(),
+  sizeBytes: integer('size_bytes').notNull().default(0),
+  tableCount: integer('table_count').notNull().default(0),
+  totalRows: integer('total_rows').notNull().default(0),
+  checksumSha256: text('checksum_sha256').default(''),
+  createdByUserId: integer('created_by_user_id').references(() => users.id, {
+    onDelete: 'set null',
+  }),
+  createdByEmail: text('created_by_email').default('system'),
+  status: text('status').notNull().default('completed'),
+  notes: text('notes').default(''),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ one }) => ({
   role: one(adminRoles, {
@@ -453,12 +659,31 @@ export const usersRelations = relations(users, ({ one }) => ({
 
 export const pagesRelations = relations(pages, ({ many }) => ({
   translations: many(pageTranslations),
+  sections: many(pageSections),
 }));
 
 export const pageTranslationsRelations = relations(pageTranslations, ({ one }) => ({
   page: one(pages, {
     fields: [pageTranslations.pageId],
     references: [pages.id],
+  }),
+}));
+
+export const pageSectionsRelations = relations(pageSections, ({ one }) => ({
+  page: one(pages, {
+    fields: [pageSections.pageId],
+    references: [pages.id],
+  }),
+}));
+
+export const sectorsRelations = relations(sectors, ({ many }) => ({
+  translations: many(sectorTranslations),
+}));
+
+export const sectorTranslationsRelations = relations(sectorTranslations, ({ one }) => ({
+  sector: one(sectors, {
+    fields: [sectorTranslations.sectorId],
+    references: [sectors.id],
   }),
 }));
 
@@ -506,11 +731,19 @@ export const productsRelations = relations(products, ({ one, many }) => ({
     references: [partners.id],
   }),
   translations: many(productTranslations),
+  priceHistory: many(productPriceHistory),
 }));
 
 export const productTranslationsRelations = relations(productTranslations, ({ one }) => ({
   product: one(products, {
     fields: [productTranslations.productId],
+    references: [products.id],
+  }),
+}));
+
+export const productPriceHistoryRelations = relations(productPriceHistory, ({ one }) => ({
+  product: one(products, {
+    fields: [productPriceHistory.productId],
     references: [products.id],
   }),
 }));

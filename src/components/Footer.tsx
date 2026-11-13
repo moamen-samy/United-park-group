@@ -51,13 +51,23 @@ export const Footer: React.FC = () => {
               onClick={() => navigate('/')}
               className="text-start focus-visible:outline-2 focus-visible:outline-white rounded"
             >
-              <ParkLogo variant="light" />
+              {settings?.logoUrl ? (
+                <img
+                  src={settings.logoUrl}
+                  alt={isAr ? settings.companyNameAr : settings.companyNameEn}
+                  className="h-10 max-w-[180px] object-contain"
+                />
+              ) : (
+                <ParkLogo variant="light" />
+              )}
             </button>
             <p className="text-sm text-slate-400 leading-relaxed max-w-xs">
               {isAr
-                ? settings?.taglineAr ||
+                ? settings?.footerAboutAr ||
+                  settings?.taglineAr ||
                   'مجموعة استثمارية وهندسية متعددة القطاعات في المملكة العربية السعودية منذ عام ١٩٨٩.'
-                : settings?.taglineEn ||
+                : settings?.footerAboutEn ||
+                  settings?.taglineEn ||
                   'Diversified Saudi holding group uniting industrial engineering, contracting, real estate, healthcare, and solar energy since 1989.'}
             </p>
             <div className="flex flex-wrap items-center gap-2.5 pt-1">

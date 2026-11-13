@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import campusFallbackImage from '../../assets/images/park_campus_clean_hero_1794540145464.jpg';
 import { GROUP_SECTORS, getSectorByKey, SectorDefinition, SectorKey } from '../../data/sectors';
+import type { BannerItem, LocalizedSector } from '../../types/cms';
 
 const CAMPUS_MODEL_URL = '/models/park-campus.glb';
 
@@ -23,8 +24,11 @@ export interface HoldingCompanyHeroProps {
   heroHeading?: string | null;
   heroSubheading?: string | null;
   heroCtaText?: string | null;
+  heroCtaUrl?: string | null;
   locale: 'en' | 'ar';
   isRtl: boolean;
+  sectors?: LocalizedSector[];
+  heroBanner?: BannerItem | null;
   selectedSector?: SectorKey | null;
   onSectorChange?: (sector: SectorKey | null) => void;
   onNavigate: (path: string) => void;
@@ -784,6 +788,8 @@ export const HoldingCompanyHero: React.FC<HoldingCompanyHeroProps> = ({
   heroCtaText,
   locale,
   isRtl,
+  sectors: dbSectors,
+  heroBanner,
   selectedSector: controlledSelectedSector,
   onSectorChange,
   onNavigate,
@@ -814,6 +820,26 @@ export const HoldingCompanyHero: React.FC<HoldingCompanyHeroProps> = ({
 
   const focusedSectorKey = hoveredSector ?? selectedSector;
   const focusedSector = focusedSectorKey ? getSectorByKey(focusedSectorKey) : null;
+  const focusedDbSector = focusedSectorKey
+    ? dbSectors?.find((s) => s.slug === focusedSectorKey)
+    : undefined;
+
+  const effectiveHeading =
+    heroHeading ||
+    (heroBanner ? (isAr ? heroBanner.titleAr : heroBanner.titleEn) : '') ||
+    (isAr
+      ? 'أكثر من مجرد مجموعة...\nرؤية تجمع قطاعات متعددة.'
+      : 'MORE THAN A GROUP.\nA VISION THAT CONNECTS INDUSTRIES.');
+  const effectiveSubheading =
+    heroSubheading ||
+    (heroBanner ? (isAr ? heroBanner.subtitleAr : heroBanner.subtitleEn) : '') ||
+    (isAr
+      ? 'تجمع مجموعة يونايتد بارك قطاعات متنوعة تشمل الحلول الصناعية والهندسية، والمقاولات، والتطوير العقاري، والرعاية الصحية، والطاقة المتجددة، ضمن رؤية موحدة للنمو والاستدامة.'
+      : 'UNITED PARK GROUP brings together diverse businesses across industrial engineering, contracting, real estate development, healthcare, and renewable energy — creating integrated opportunities for sustainable growth and a stronger future.');
+  const effectiveCtaText =
+    heroCtaText ||
+    (heroBanner ? (isAr ? heroBanner.ctaTextAr : heroBanner.ctaTextEn) : '') ||
+    (isAr ? 'استكشف قطاعات المجموعة' : 'EXPLORE OUR GROUP');
 
   useEffect(() => {
     const mobileQuery = window.matchMedia('(max-width: 767px)');
@@ -956,17 +982,11 @@ export const HoldingCompanyHero: React.FC<HoldingCompanyHeroProps> = ({
             className="font-display font-extrabold tracking-tight text-white leading-[1.08] whitespace-pre-line"
             style={{ fontSize: 'clamp(2.1rem, 4.3vw, 3.65rem)', textWrap: 'balance' }}
           >
-            {heroHeading ||
-              (isAr
-                ? 'أكثر من مجرد مجموعة...\nرؤية تجمع قطاعات متعددة.'
-                : 'MORE THAN A GROUP.\nA VISION THAT CONNECTS INDUSTRIES.')}
+            {effectiveHeading}
           </h1>
 
           <p className="text-sm sm:text-base lg:text-[17px] text-slate-200 leading-relaxed max-w-xl">
-            {heroSubheading ||
-              (isAr
-                ? 'تجمع مجموعة يونايتد بارك قطاعات متنوعة تشمل الحلول الصناعية والهندسية، والمقاولات، والتطوير العقاري، والرعاية الصحية، والطاقة المتجددة، ضمن رؤية موحدة للنمو والاستدامة.'
-                : 'UNITED PARK GROUP brings together diverse businesses across industrial engineering, contracting, real estate development, healthcare, and renewable energy — creating integrated opportunities for sustainable growth and a stronger future.')}
+            {effectiveSubheading}
           </p>
 
           {/* Primary & Secondary CTAs */}
@@ -976,9 +996,7 @@ export const HoldingCompanyHero: React.FC<HoldingCompanyHeroProps> = ({
               onClick={onExploreGroup}
               className="inline-flex items-center gap-2.5 px-6 sm:px-7 py-3.5 text-xs sm:text-sm font-bold tracking-wide uppercase text-white bg-[#16528E] hover:bg-[#1B64AC] rounded-md shadow-lg transition-colors min-h-[44px]"
             >
-              <span>
-                {heroCtaText || (isAr ? 'استكشف قطاعات المجموعة' : 'EXPLORE OUR GROUP')}
-              </span>
+              <span>{effectiveCtaText}</span>
               <ArrowIcon className="w-4 h-4" aria-hidden="true" />
             </button>
 
@@ -1010,11 +1028,13 @@ export const HoldingCompanyHero: React.FC<HoldingCompanyHeroProps> = ({
                     </span>
                     <span aria-hidden="true">·</span>
                     <span className="text-slate-300">
-                      {isAr ? focusedSector.ar.subtitle : focusedSector.en.subtitle}
+                      {focusedDbSector?.translation?.tagline ||
+                        (isAr ? focusedSector.ar.subtitle : focusedSector.en.subtitle)}
                     </span>
                   </div>
                   <p className="text-sm sm:text-base font-bold text-white">
-                    {isAr ? focusedSector.ar.title : focusedSector.en.title}
+                    {focusedDbSector?.translation?.title ||
+                      (isAr ? focusedSector.ar.title : focusedSector.en.title)}
                   </p>
                 </div>
               </div>
@@ -1035,7 +1055,7 @@ export const HoldingCompanyHero: React.FC<HoldingCompanyHeroProps> = ({
                 )}
                 <button
                   type="button"
-                  onClick={() => onNavigate(focusedSector.route)}
+                  onClick={() => onNavigate(focusedDbSector?.routePath || focusedSector.route)}
                   className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-[#D93829] hover:bg-[#B92B1D] rounded-md transition-colors"
                 >
                   <span>{isAr ? 'استكشف القطاع' : 'Explore Sector'}</span>
@@ -1052,6 +1072,7 @@ export const HoldingCompanyHero: React.FC<HoldingCompanyHeroProps> = ({
             aria-label={isAr ? 'محدد قطاعات المجموعة' : 'Five-tile sector dock'}
           >
             {GROUP_SECTORS.map((sec) => {
+              const dbSec = dbSectors?.find((s) => s.slug === sec.key);
               const isActive = focusedSectorKey === sec.key;
               return (
                 <button
@@ -1083,7 +1104,9 @@ export const HoldingCompanyHero: React.FC<HoldingCompanyHeroProps> = ({
                       {sec.zoneCode}
                     </span>
                     <span className="block text-xs sm:text-[13px] font-semibold leading-tight truncate">
-                      {isAr ? sec.ar.shortLabel : sec.en.shortLabel}
+                      {dbSec?.translation?.shortTitle ||
+                        dbSec?.translation?.title ||
+                        (isAr ? sec.ar.shortLabel : sec.en.shortLabel)}
                     </span>
                   </span>
                 </button>
