@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import express, { Request, Response, NextFunction } from 'express';
+import express, { type Request, type Response, type NextFunction } from 'express';
 import path from 'path';
 import multer from 'multer';
 import { z } from 'zod';
@@ -48,12 +48,12 @@ import {
   getPublicBootstrap,
   getPublicSettings,
   getSitemapEntities,
-  Locale,
+  type Locale,
   logActivity,
   upsertPageTranslation,
 } from './src/db/queries.ts';
 import {
-  AuthRequest,
+  type AuthRequest,
   requireAuth,
   requirePermission,
   userHasAnyPermission,
